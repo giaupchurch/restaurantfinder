@@ -609,6 +609,10 @@ function SpotFinder() {
   const [filterLunch, setFilterLunch] = useState(false);
   const [filterBrunch, setFilterBrunch] = useState(false);
   const [filterDateNight, setFilterDateNight] = useState(false);
+  const [filterOpenNow, setFilterOpenNow] = useState(false);
+  const [openNowLoading, setOpenNowLoading] = useState(false);
+  const [openNowCache, setOpenNowCache] = useState({}); // { placeId: { isOpen: bool, checkedAt: timestamp } }
+  const [openNowChecked, setOpenNowChecked] = useState(false); // true once we've checked hours
   const [showForm, setShowForm] = useState(false);
 
   // === RADIUS FILTER STATE ===
@@ -752,57 +756,151 @@ function SpotFinder() {
   const [geocodeProgress, setGeocodeProgress] = useState("");
 
   const handleGeocodeAll = async () => {
-    if (!user || !db || !window.google || !window.google.maps) {
+    if (!user || !db || !window.google || !window.google.maps || !window.google.maps.places) {
       alert("Sign in and make sure Google Maps is loaded first.");
       return;
     }
-    const needsCoords = places.filter((p) => !p.lat || !p.lng);
-    if (needsCoords.length === 0) { alert("All restaurants already have coordinates!"); return; }
+
+    // Find restaurants needing coordinates OR missing googlePlaceId
+    const needsWork = places.filter((p) => !p.lat || !p.lng || !p.googlePlaceId);
+    if (needsWork.length === 0) { alert("All restaurants already have coordinates and place IDs!"); return; }
 
     setGeocoding(true);
-    setGeocodeProgress("Starting geocoding...");
-    const geocoder = new google.maps.Geocoder();
+    setGeocodeProgress("Starting...");
+
+    // Create a hidden div for PlacesService (required by Google API)
+    let serviceDiv = document.getElementById("places-service-div");
+    if (!serviceDiv) {
+      serviceDiv = document.createElement("div");
+      serviceDiv.id = "places-service-div";
+      serviceDiv.style.display = "none";
+      document.body.appendChild(serviceDiv);
+    }
+    const service = new google.maps.places.PlacesService(serviceDiv);
+
     let updated = 0;
     let failed = 0;
 
-    for (let i = 0; i < needsCoords.length; i++) {
-      const p = needsCoords[i];
+    for (let i = 0; i < needsWork.length; i++) {
+      const p = needsWork[i];
       const query = p.name + ", " + (p.location || "Boulder") + ", Colorado";
-      setGeocodeProgress("Geocoding " + (i + 1) + " of " + needsCoords.length + ": " + p.name);
+      setGeocodeProgress("Looking up " + (i + 1) + " of " + needsWork.length + ": " + p.name);
 
       try {
-        const result = await new Promise((resolve, reject) => {
-          geocoder.geocode({ address: query }, (results, status) => {
-            if (status === "OK" && results[0]) resolve(results[0]);
+        // Use findPlaceFromQuery to get placeId + location in one call
+        const placeResult = await new Promise((resolve, reject) => {
+          service.findPlaceFromQuery({
+            query: query,
+            fields: ["place_id", "geometry", "formatted_address", "name"]
+          }, (results, status) => {
+            if (status === "OK" && results && results[0]) resolve(results[0]);
             else reject(status);
           });
         });
 
-        const loc = result.geometry.location;
-        const updateData = {
-          lat: loc.lat(),
-          lng: loc.lng(),
-          address: result.formatted_address || "",
-        };
+        const updateData = {};
+        if (placeResult.geometry && placeResult.geometry.location) {
+          updateData.lat = placeResult.geometry.location.lat();
+          updateData.lng = placeResult.geometry.location.lng();
+        }
+        if (placeResult.formatted_address) {
+          updateData.address = placeResult.formatted_address;
+        }
+        if (placeResult.place_id) {
+          updateData.googlePlaceId = placeResult.place_id;
+        }
 
-        if (p._docId) {
+        if (p._docId && Object.keys(updateData).length > 0) {
           await db.collection("restaurants").doc(p._docId).update(updateData);
         }
         updated++;
       } catch (err) {
-        console.warn("Failed to geocode:", p.name, err);
+        console.warn("Failed to look up:", p.name, err);
         failed++;
       }
 
       // Small delay to avoid hitting API rate limits
-      if (i < needsCoords.length - 1) {
-        await new Promise((r) => setTimeout(r, 200));
+      if (i < needsWork.length - 1) {
+        await new Promise((r) => setTimeout(r, 300));
       }
     }
 
-    setGeocodeProgress("Done! " + updated + " geocoded" + (failed > 0 ? ", " + failed + " failed" : ""));
+    setGeocodeProgress("Done! " + updated + " updated" + (failed > 0 ? ", " + failed + " failed" : ""));
     setGeocoding(false);
   };
+
+  // === OPEN NOW LOGIC ===
+  const checkOpenNow = useCallback(async () => {
+    if (!window.google || !window.google.maps || !window.google.maps.places) return;
+
+    setOpenNowLoading(true);
+
+    // Create hidden div for PlacesService
+    let serviceDiv = document.getElementById("places-service-div");
+    if (!serviceDiv) {
+      serviceDiv = document.createElement("div");
+      serviceDiv.id = "places-service-div";
+      serviceDiv.style.display = "none";
+      document.body.appendChild(serviceDiv);
+    }
+    const service = new google.maps.places.PlacesService(serviceDiv);
+
+    // Only check places that have a googlePlaceId and aren't cached (or cache expired)
+    const now = Date.now();
+    const CACHE_DURATION = 15 * 60 * 1000; // 15 minutes
+    const placesToCheck = places.filter((p) => {
+      if (!p.googlePlaceId) return false;
+      const cached = openNowCache[p.googlePlaceId];
+      if (cached && (now - cached.checkedAt) < CACHE_DURATION) return false;
+      return true;
+    });
+
+    const newCache = { ...openNowCache };
+
+    // Check in batches with delays to avoid rate limits
+    for (let i = 0; i < placesToCheck.length; i++) {
+      const p = placesToCheck[i];
+      try {
+        const details = await new Promise((resolve, reject) => {
+          service.getDetails({
+            placeId: p.googlePlaceId,
+            fields: ["opening_hours", "business_status"]
+          }, (result, status) => {
+            if (status === "OK" && result) resolve(result);
+            else reject(status);
+          });
+        });
+
+        let isOpen = null; // null = unknown
+        if (details.business_status === "CLOSED_TEMPORARILY" || details.business_status === "CLOSED_PERMANENTLY") {
+          isOpen = false;
+        } else if (details.opening_hours && typeof details.opening_hours.isOpen === "function") {
+          isOpen = details.opening_hours.isOpen();
+        }
+
+        newCache[p.googlePlaceId] = { isOpen, checkedAt: Date.now() };
+      } catch (err) {
+        // If we can't check, mark as unknown
+        newCache[p.googlePlaceId] = { isOpen: null, checkedAt: Date.now() };
+      }
+
+      // Small delay between API calls
+      if (i < placesToCheck.length - 1) {
+        await new Promise((r) => setTimeout(r, 150));
+      }
+    }
+
+    setOpenNowCache(newCache);
+    setOpenNowChecked(true);
+    setOpenNowLoading(false);
+  }, [places, openNowCache]);
+
+  // When Open Now is toggled on, check hours
+  useEffect(() => {
+    if (filterOpenNow && !openNowChecked) {
+      checkOpenNow();
+    }
+  }, [filterOpenNow, openNowChecked, checkOpenNow]);
 
   // === CRUD OPERATIONS ===
   const savePlace = async (formData) => {
@@ -876,6 +974,14 @@ function SpotFinder() {
         const dateHint = `${p.goodFor} ${p.vibe} ${p.notes}`.toLowerCase();
         if (!dateHint.includes("date")) return false;
       }
+      // Open Now filter
+      if (filterOpenNow && openNowChecked) {
+        if (!p.googlePlaceId) return false; // Can't check without placeId
+        const cached = openNowCache[p.googlePlaceId];
+        if (!cached) return false;
+        if (cached.isOpen === false) return false; // Definitely closed
+        // isOpen === null (unknown) — keep showing it
+      }
       // Radius filter: skip places without coordinates
       if (radiusMode && radiusCenter) {
         if (!p.lat || !p.lng) return false;
@@ -897,15 +1003,15 @@ function SpotFinder() {
     }
 
     return result;
-  }, [places, search, filterLocations, filterTypes, filterFoodTypes, filterKidFriendly, filterHappyHour, filterOutdoor, filterDinner, filterLunch, filterBrunch, filterDateNight, radiusMode, radiusCenter, radiusMiles]);
+  }, [places, search, filterLocations, filterTypes, filterFoodTypes, filterKidFriendly, filterHappyHour, filterOutdoor, filterDinner, filterLunch, filterBrunch, filterDateNight, filterOpenNow, openNowChecked, openNowCache, radiusMode, radiusCenter, radiusMiles]);
 
-  const hasActiveFilters = search || filterLocations.length > 0 || filterTypes.length > 0 || filterFoodTypes.length > 0 || filterKidFriendly || filterHappyHour || filterOutdoor || filterDinner || filterLunch || filterBrunch || filterDateNight || radiusMode;
+  const hasActiveFilters = search || filterLocations.length > 0 || filterTypes.length > 0 || filterFoodTypes.length > 0 || filterKidFriendly || filterHappyHour || filterOutdoor || filterDinner || filterLunch || filterBrunch || filterDateNight || filterOpenNow || radiusMode;
 
   const clearFilters = () => {
     setSearch(""); setFilterLocations([]); setFilterTypes([]); setFilterFoodTypes([]);
     setFilterKidFriendly(false); setFilterHappyHour(false); setFilterOutdoor(false);
     setFilterDinner(false); setFilterLunch(false); setFilterBrunch(false);
-    setFilterDateNight(false); clearRadius();
+    setFilterDateNight(false); setFilterOpenNow(false); setOpenNowChecked(false); clearRadius();
   };
 
   return (
@@ -973,6 +1079,9 @@ function SpotFinder() {
             <Toggle label="Lunch" active={filterLunch} onClick={() => setFilterLunch(!filterLunch)} color="purple" />
             <Toggle label="Brunch" active={filterBrunch} onClick={() => setFilterBrunch(!filterBrunch)} color="rose" />
             <Toggle label="Date Night" active={filterDateNight} onClick={() => setFilterDateNight(!filterDateNight)} color="rose" />
+            {window.GOOGLE_MAPS_READY && (
+              <Toggle label={openNowLoading ? "Checking..." : "Open Now"} active={filterOpenNow} onClick={() => { setFilterOpenNow(!filterOpenNow); if (filterOpenNow) { setOpenNowChecked(false); } }} color="blue" />
+            )}
             {hasActiveFilters && (
               <button onClick={clearFilters} className="text-xs font-bold text-purple-500 hover:text-purple-700 ml-1">
                 Clear
@@ -1102,9 +1211,9 @@ function SpotFinder() {
               <button onClick={handleExport} className="text-xs text-purple-400 hover:text-purple-600 font-medium hover:underline">
                 Export to Spreadsheet
               </button>
-              {user && window.GOOGLE_MAPS_READY && places.some((p) => !p.lat || !p.lng) && (
+              {user && window.GOOGLE_MAPS_READY && places.some((p) => !p.lat || !p.lng || !p.googlePlaceId) && (
                 <button onClick={handleGeocodeAll} disabled={geocoding} className="text-xs text-blue-400 hover:text-blue-600 font-medium hover:underline disabled:opacity-50">
-                  {geocoding ? geocodeProgress : "Add Coordinates (" + places.filter((p) => !p.lat || !p.lng).length + " missing)"}
+                  {geocoding ? geocodeProgress : "Add Coordinates & IDs (" + places.filter((p) => !p.lat || !p.lng || !p.googlePlaceId).length + " missing)"}
                 </button>
               )}
             </div>
