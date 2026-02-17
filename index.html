@@ -276,39 +276,61 @@ function Toggle({ label, active, onClick, color = "blue" }) {
 }
 
 // ===== EDIT FORM COMPONENT (with Google Places Autocomplete) =====
-function EditForm({ place, onSave, onCancel, locations, types, foodTypes }) {
+function EditForm({ place, onSave, onCancel, locations, types, foodTypes, existingPlaces }) {
   const [form, setForm] = useState({ ...place });
   const set = (field, val) => setForm((f) => ({ ...f, [field]: val }));
   const nameInputRef = useRef(null);
   const autocompleteRef = useRef(null);
 
+  // Check for duplicate name (only when adding new, not editing)
+  const isNewPlace = !place.id && !place._docId;
+  const duplicateMatch = isNewPlace && form.name && form.name.trim().length > 2
+    ? (existingPlaces || []).find((p) => p.name && p.name.toLowerCase().trim() === form.name.toLowerCase().trim())
+    : null;
+
   // Set up Google Places Autocomplete on the name input
+  // Uses polling to wait for Google Maps API to load (it loads async)
   useEffect(() => {
-    if (!window.google || !window.google.maps || !window.google.maps.places || !nameInputRef.current) return;
-    if (autocompleteRef.current) return; // already initialized
+    if (autocompleteRef.current) return;
+    if (!nameInputRef.current) return;
 
-    const ac = new google.maps.places.Autocomplete(nameInputRef.current, {
-      types: ["establishment"],
-      componentRestrictions: { country: "us" },
-      fields: ["name", "formatted_address", "geometry", "place_id", "formatted_phone_number", "website", "opening_hours", "photos"]
-    });
+    const tryInit = () => {
+      if (!window.google || !window.google.maps || !window.google.maps.places) return false;
 
-    ac.addListener("place_changed", () => {
-      const p = ac.getPlace();
-      if (!p || !p.name) return;
-      setForm((f) => ({
-        ...f,
-        name: p.name || f.name,
-        address: p.formatted_address || "",
-        googlePlaceId: p.place_id || "",
-        phone: p.formatted_phone_number || "",
-        website: p.website || "",
-        lat: p.geometry && p.geometry.location ? p.geometry.location.lat() : null,
-        lng: p.geometry && p.geometry.location ? p.geometry.location.lng() : null,
-      }));
-    });
+      const ac = new google.maps.places.Autocomplete(nameInputRef.current, {
+        types: ["establishment"],
+        componentRestrictions: { country: "us" },
+        fields: ["name", "formatted_address", "geometry", "place_id", "formatted_phone_number", "website"]
+      });
 
-    autocompleteRef.current = ac;
+      ac.addListener("place_changed", () => {
+        const p = ac.getPlace();
+        if (!p || !p.name) return;
+        setForm((f) => ({
+          ...f,
+          name: p.name || f.name,
+          address: p.formatted_address || "",
+          googlePlaceId: p.place_id || "",
+          phone: p.formatted_phone_number || "",
+          website: p.website || "",
+          lat: p.geometry && p.geometry.location ? p.geometry.location.lat() : null,
+          lng: p.geometry && p.geometry.location ? p.geometry.location.lng() : null,
+        }));
+      });
+
+      autocompleteRef.current = ac;
+      return true;
+    };
+
+    // Try immediately, then poll every 500ms for up to 10 seconds
+    if (!tryInit()) {
+      let attempts = 0;
+      const interval = setInterval(() => {
+        attempts++;
+        if (tryInit() || attempts >= 20) clearInterval(interval);
+      }, 500);
+      return () => clearInterval(interval);
+    }
   }, []);
 
   return (
@@ -323,6 +345,11 @@ function EditForm({ place, onSave, onCancel, locations, types, foodTypes }) {
         <input ref={nameInputRef} value={form.name || ""} onChange={(e) => set("name", e.target.value)} placeholder={window.GOOGLE_MAPS_READY ? "Start typing a place name..." : "Name *"} className="w-full border-2 border-purple-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300" />
         {form.address && (
           <p className="text-xs text-gray-400 mt-1 px-1">{form.address}</p>
+        )}
+        {duplicateMatch && (
+          <p className="text-xs text-amber-600 font-medium mt-1 px-1 bg-amber-50 rounded-lg py-1.5">
+            Heads up: "{duplicateMatch.name}" is already in your list{duplicateMatch.location ? ` (${duplicateMatch.location})` : ""}. You can still add it if this is a different location.
+          </p>
         )}
       </div>
 
@@ -830,6 +857,7 @@ function SpotFinder() {
               locations={locations}
               types={types}
               foodTypes={foodTypes}
+              existingPlaces={places}
             />
           </div>
         )}
