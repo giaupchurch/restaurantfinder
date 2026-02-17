@@ -26,7 +26,7 @@
   <div id="root"></div>
 
   <script type="text/babel">
-const { useState, useMemo } = React;
+const { useState, useMemo, useRef, useEffect } = React;
 
 const PLACES = [
   { id: 1, name: "24 Carrot", location: "Erie", type: "Restaurant", foodType: "New American", kidFriendly: "", vibe: "", goodFor: "", happyHour: false, dinner: false, lunch: false, brunch: false, outdoor: false, notes: "" },
@@ -282,14 +282,68 @@ function PlaceRow({ place, isExpanded, onToggle }) {
   );
 }
 
+function MultiSelect({ label, options, selected, onChange }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const toggle = (val) => {
+    if (selected.includes(val)) onChange(selected.filter((s) => s !== val));
+    else onChange([...selected, val]);
+  };
+
+  const displayText = selected.length === 0 ? label : selected.length === 1 ? selected[0] : `${selected.length} selected`;
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen(!open)}
+        className={`flex items-center gap-1 border-2 rounded-xl px-3 py-1.5 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-purple-300 transition-all ${
+          selected.length > 0
+            ? "bg-purple-50 border-purple-300 text-purple-700"
+            : "bg-white border-purple-100 text-gray-600"
+        }`}
+      >
+        <span className="truncate max-w-[120px]">{displayText}</span>
+        <span className={`text-[10px] transition-transform ${open ? "rotate-180" : ""}`}>&#9662;</span>
+      </button>
+      {open && (
+        <div className="absolute top-full left-0 mt-1 bg-white border-2 border-purple-100 rounded-xl shadow-lg z-50 min-w-[160px] max-h-[240px] overflow-y-auto py-1">
+          {options.map((opt) => (
+            <button
+              key={opt}
+              onClick={() => toggle(opt)}
+              className={`w-full text-left px-3 py-1.5 text-xs hover:bg-purple-50 flex items-center gap-2 ${
+                selected.includes(opt) ? "text-purple-700 font-bold" : "text-gray-600"
+              }`}
+            >
+              <span className={`w-3.5 h-3.5 rounded border flex items-center justify-center shrink-0 ${
+                selected.includes(opt) ? "bg-purple-600 border-purple-600 text-white" : "border-gray-300"
+              }`}>
+                {selected.includes(opt) && <span className="text-[9px]">&#10003;</span>}
+              </span>
+              {opt}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function SpotFinder() {
   const [places] = useState(PLACES);
   const [expandedId, setExpandedId] = useState(null);
 
   const [search, setSearch] = useState("");
-  const [filterLocation, setFilterLocation] = useState("All");
-  const [filterType, setFilterType] = useState("All");
-  const [filterFoodType, setFilterFoodType] = useState("All");
+  const [filterLocations, setFilterLocations] = useState([]);
+  const [filterTypes, setFilterTypes] = useState([]);
+  const [filterFoodTypes, setFilterFoodTypes] = useState([]);
   const [filterKidFriendly, setFilterKidFriendly] = useState(false);
   const [filterHappyHour, setFilterHappyHour] = useState(false);
   const [filterOutdoor, setFilterOutdoor] = useState(false);
@@ -310,9 +364,9 @@ function SpotFinder() {
         const searchable = `${p.name} ${p.foodType} ${p.vibe} ${p.notes} ${p.goodFor}`.toLowerCase();
         if (!searchable.includes(q)) return false;
       }
-      if (filterLocation !== "All" && p.location !== filterLocation) return false;
-      if (filterType !== "All" && p.type !== filterType) return false;
-      if (filterFoodType !== "All" && p.foodType !== filterFoodType) return false;
+      if (filterLocations.length > 0 && !filterLocations.includes(p.location)) return false;
+      if (filterTypes.length > 0 && !filterTypes.includes(p.type)) return false;
+      if (filterFoodTypes.length > 0 && !filterFoodTypes.includes(p.foodType)) return false;
       if (filterKidFriendly && p.kidFriendly !== "yes" && p.kidFriendly !== "maybe") return false;
       if (filterHappyHour && !p.happyHour) return false;
       if (filterOutdoor && !p.outdoor) return false;
@@ -329,54 +383,47 @@ function SpotFinder() {
     result.sort((a, b) => a.name.localeCompare(b.name));
 
     return result;
-  }, [places, search, filterLocation, filterType, filterFoodType, filterKidFriendly, filterHappyHour, filterOutdoor, filterDinner, filterLunch, filterBrunch, filterDateNight]);
+  }, [places, search, filterLocations, filterTypes, filterFoodTypes, filterKidFriendly, filterHappyHour, filterOutdoor, filterDinner, filterLunch, filterBrunch, filterDateNight]);
 
-  const hasActiveFilters = search || filterLocation !== "All" || filterType !== "All" || filterFoodType !== "All" || filterKidFriendly || filterHappyHour || filterOutdoor || filterDinner || filterLunch || filterBrunch || filterDateNight;
+  const hasActiveFilters = search || filterLocations.length > 0 || filterTypes.length > 0 || filterFoodTypes.length > 0 || filterKidFriendly || filterHappyHour || filterOutdoor || filterDinner || filterLunch || filterBrunch || filterDateNight;
 
   const clearFilters = () => {
-    setSearch(""); setFilterLocation("All"); setFilterType("All"); setFilterFoodType("All");
+    setSearch(""); setFilterLocations([]); setFilterTypes([]); setFilterFoodTypes([]);
     setFilterKidFriendly(false); setFilterHappyHour(false); setFilterOutdoor(false);
     setFilterDinner(false); setFilterLunch(false); setFilterBrunch(false);
     setFilterDateNight(false);
   };
-
-  const sc = "bg-white border-2 border-purple-100 rounded-xl px-3 py-1.5 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-purple-300 text-gray-600";
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-amber-50">
       {/* Header */}
       <div className="bg-white/80 border-b border-purple-100 sticky top-0 z-10" style={{ backdropFilter: "blur(12px)" }}>
         <div className="max-w-2xl mx-auto px-4 py-3">
-          <div className="flex items-center justify-between mb-2.5">
-            <h1 className="text-xl font-black bg-gradient-to-r from-purple-600 via-pink-500 to-amber-500 bg-clip-text" style={{ WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-              Spot Finder
-            </h1>
-            <span className="text-xs font-bold bg-purple-100 text-purple-600 px-2.5 py-1 rounded-full">{filtered.length} spots</span>
+          {/* Row 1: Type of Place + Search + Add */}
+          <div className="flex gap-2 items-center mb-2">
+            <MultiSelect label="Type of Place" options={types} selected={filterTypes} onChange={setFilterTypes} />
+            <input
+              type="text"
+              placeholder="Search..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="flex-1 border-2 border-purple-100 rounded-xl px-3 py-1.5 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent bg-white"
+            />
+            <button
+              onClick={() => setShowForm(!showForm)}
+              className="bg-gradient-to-r from-purple-600 to-pink-500 text-white text-xs font-bold px-3.5 py-1.5 rounded-full shadow-md hover:shadow-lg transition-all shrink-0"
+            >
+              + Add
+            </button>
           </div>
 
-          <input
-            type="text"
-            placeholder="Search your spots..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full border-2 border-purple-100 rounded-2xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent bg-white mb-2.5"
-          />
-
-          <div className="flex gap-2 items-center flex-wrap mb-2">
-            <select className={sc} value={filterLocation} onChange={(e) => setFilterLocation(e.target.value)}>
-              <option value="All">All Locations</option>
-              {locations.map((l) => <option key={l}>{l}</option>)}
-            </select>
-            <select className={sc} value={filterType} onChange={(e) => setFilterType(e.target.value)}>
-              <option value="All">All Types</option>
-              {types.map((t) => <option key={t}>{t}</option>)}
-            </select>
-            <select className={sc} value={filterFoodType} onChange={(e) => setFilterFoodType(e.target.value)}>
-              <option value="All">All Food</option>
-              {foodTypes.map((f) => <option key={f}>{f}</option>)}
-            </select>
+          {/* Row 2: Location + Food Type */}
+          <div className="flex gap-2 items-center mb-2">
+            <MultiSelect label="Location" options={locations} selected={filterLocations} onChange={setFilterLocations} />
+            <MultiSelect label="Food Type" options={foodTypes} selected={filterFoodTypes} onChange={setFilterFoodTypes} />
           </div>
 
+          {/* Row 3: Toggles + Add */}
           <div className="flex items-center gap-1.5 flex-wrap">
             <Toggle label="Kid Friendly" active={filterKidFriendly} onClick={() => setFilterKidFriendly(!filterKidFriendly)} color="green" />
             <Toggle label="Happy Hour" active={filterHappyHour} onClick={() => setFilterHappyHour(!filterHappyHour)} color="amber" />
@@ -390,13 +437,6 @@ function SpotFinder() {
                 Clear
               </button>
             )}
-            <div className="flex-1" />
-            <button
-              onClick={() => setShowForm(!showForm)}
-              className="bg-gradient-to-r from-purple-600 to-pink-500 text-white text-xs font-bold px-3.5 py-1.5 rounded-full shadow-md hover:shadow-lg transition-all"
-            >
-              + Add
-            </button>
           </div>
         </div>
       </div>
