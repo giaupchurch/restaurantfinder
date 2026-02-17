@@ -399,6 +399,8 @@ function EditForm({ place, onSave, onCancel, locations, types, foodTypes, existi
           { key: "brunch", label: "Brunch", color: "rose" },
           { key: "outdoor", label: "Outdoor", color: "teal" },
           { key: "notableOutdoor", label: "Great Patio", color: "teal" },
+          { key: "dateNight", label: "Date Night", color: "rose" },
+          { key: "kidsAndBeers", label: "Kids & Beers", color: "blue" },
         ].map((t) => (
           <Toggle key={t.key} label={t.label} active={!!form[t.key]} onClick={() => set(t.key, !form[t.key])} color={t.color} />
         ))}
@@ -430,6 +432,8 @@ function PlaceRow({ place, isExpanded, onToggle, user, onEdit, onDelete, radiusM
   if (place.happyHour) badges.push({ label: "Happy Hour", color: "bg-amber-100 text-amber-700" });
   if (place.outdoor && place.notableOutdoor) badges.push({ label: "Great Patio \u2605", color: "bg-teal-100 text-teal-700" });
   else if (place.outdoor) badges.push({ label: "Patio", color: "bg-teal-100 text-teal-700" });
+  if (place.dateNight) badges.push({ label: "Date Night", color: "bg-rose-100 text-rose-700" });
+  if (place.kidsAndBeers) badges.push({ label: "Kids & Beers", color: "bg-blue-100 text-blue-700" });
 
   const meals = [];
   if (place.dinner) meals.push("Dinner");
@@ -609,6 +613,7 @@ function SpotFinder() {
   const [filterLunch, setFilterLunch] = useState(false);
   const [filterBrunch, setFilterBrunch] = useState(false);
   const [filterDateNight, setFilterDateNight] = useState(false);
+  const [filterKidsAndBeers, setFilterKidsAndBeers] = useState(false);
   const [filterOpenNow, setFilterOpenNow] = useState(false);
   const [openNowLoading, setOpenNowLoading] = useState(false);
   const [openNowCache, setOpenNowCache] = useState({}); // { placeId: { isOpen: bool, checkedAt: timestamp } }
@@ -829,6 +834,64 @@ function SpotFinder() {
     setGeocoding(false);
   };
 
+  // === TAG MIGRATION ===
+  const [tagging, setTagging] = useState(false);
+  const [tagProgress, setTagProgress] = useState("");
+
+  const handleTagMigration = async () => {
+    if (!user || !db) { alert("Sign in first."); return; }
+    setTagging(true);
+    setTagProgress("Applying tags...");
+
+    const KIDS_AND_BEERS_NAMES = [
+      "Junkyard Social", "Avery", "Rayback Collective", "Acreage",
+      "Rocky Flats Beergarden", "Colorado Tap House", "Grossen Bart",
+      "New Terrain Brewing"
+    ];
+    const KIDS_AND_BEERS_PARTIAL = [
+      { match: "Pica's", location: "East Boulder" },
+      { match: "Post", location: "Lafayette" },
+    ];
+
+    let updated = 0;
+    for (const p of places) {
+      if (!p._docId) continue;
+      const updateData = {};
+
+      // Date Night: tag if goodFor/vibe/notes contains "date"
+      if (!p.dateNight) {
+        const dateHint = ((p.goodFor || "") + " " + (p.vibe || "") + " " + (p.notes || "")).toLowerCase();
+        if (dateHint.includes("date")) {
+          updateData.dateNight = true;
+        }
+      }
+
+      // Kids & Beers: tag by exact name or partial match with location
+      if (!p.kidsAndBeers) {
+        const isKB = KIDS_AND_BEERS_NAMES.some((n) => n.toLowerCase() === (p.name || "").toLowerCase()) ||
+          KIDS_AND_BEERS_PARTIAL.some((m) => (p.name || "").toLowerCase().includes(m.match.toLowerCase()) && (p.location || "").toLowerCase() === m.location.toLowerCase());
+        if (isKB) {
+          updateData.kidsAndBeers = true;
+        }
+      }
+
+      if (Object.keys(updateData).length > 0) {
+        try {
+          await db.collection("restaurants").doc(p._docId).update(updateData);
+          updated++;
+        } catch (e) {
+          console.warn("Failed to tag:", p.name, e);
+        }
+      }
+    }
+
+    setTagProgress("Done! Tagged " + updated + " places.");
+    setTagging(false);
+  };
+
+  // Check if migration is needed (any places missing the new fields)
+  const needsTagMigration = places.some((p) => p.dateNight === undefined && p.kidsAndBeers === undefined);
+
   // === OPEN NOW LOGIC ===
   const checkOpenNow = useCallback(async () => {
     if (!window.google || !window.google.maps || !window.google.maps.places) return;
@@ -933,17 +996,18 @@ function SpotFinder() {
 
   // === EXPORT TO SPREADSHEET ===
   const handleExport = () => {
-    const headers = ["Name", "Location", "Type", "Food Type", "Kid Friendly", "Vibe", "Good For", "Happy Hour", "Dinner", "Lunch", "Breakfast/Brunch", "Has Outdoor Space", "Notable Outdoor Space", "Notes", "Address", "Phone", "Website"];
+    const headers = ["Name", "Location", "Type", "Food Type", "Kid Friendly", "Vibe", "Good For", "Happy Hour", "Dinner", "Lunch", "Breakfast/Brunch", "Has Outdoor Space", "Notable Outdoor Space", "Date Night", "Kids & Beers", "Notes", "Address", "Phone", "Website"];
     const rows = places.map((p) => [
       p.name || "", p.location || "", p.type || "", p.foodType || "",
       p.kidFriendly === "yes" ? "Y" : p.kidFriendly === "maybe" ? "Maybe" : p.kidFriendly === "no" ? "N" : "",
       p.vibe || "", p.goodFor || "",
       p.happyHour ? "Y" : "N", p.dinner ? "Y" : "N", p.lunch ? "Y" : "N", p.brunch ? "Y" : "N",
       p.outdoor ? "Y" : "N", p.notableOutdoor ? "Y" : "N",
+      p.dateNight ? "Y" : "N", p.kidsAndBeers ? "Y" : "N",
       p.notes || "", p.address || "", p.phone || "", p.website || ""
     ]);
     const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
-    ws["!cols"] = [{ wch: 30 }, { wch: 16 }, { wch: 20 }, { wch: 16 }, { wch: 12 }, { wch: 40 }, { wch: 30 }, { wch: 10 }, { wch: 8 }, { wch: 8 }, { wch: 14 }, { wch: 14 }, { wch: 16 }, { wch: 50 }, { wch: 40 }, { wch: 16 }, { wch: 30 }];
+    ws["!cols"] = [{ wch: 30 }, { wch: 16 }, { wch: 20 }, { wch: 16 }, { wch: 12 }, { wch: 40 }, { wch: 30 }, { wch: 10 }, { wch: 8 }, { wch: 8 }, { wch: 14 }, { wch: 14 }, { wch: 16 }, { wch: 12 }, { wch: 12 }, { wch: 50 }, { wch: 40 }, { wch: 16 }, { wch: 30 }];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Restaurants");
     const today = new Date().toISOString().split("T")[0];
@@ -970,10 +1034,8 @@ function SpotFinder() {
       if (filterDinner && !p.dinner) return false;
       if (filterLunch && !p.lunch) return false;
       if (filterBrunch && !p.brunch) return false;
-      if (filterDateNight) {
-        const dateHint = `${p.goodFor} ${p.vibe} ${p.notes}`.toLowerCase();
-        if (!dateHint.includes("date")) return false;
-      }
+      if (filterDateNight && !p.dateNight) return false;
+      if (filterKidsAndBeers && !p.kidsAndBeers) return false;
       // Open Now filter
       if (filterOpenNow && openNowChecked) {
         if (!p.googlePlaceId) return false; // Can't check without placeId
@@ -1003,15 +1065,15 @@ function SpotFinder() {
     }
 
     return result;
-  }, [places, search, filterLocations, filterTypes, filterFoodTypes, filterKidFriendly, filterHappyHour, filterOutdoor, filterDinner, filterLunch, filterBrunch, filterDateNight, filterOpenNow, openNowChecked, openNowCache, radiusMode, radiusCenter, radiusMiles]);
+  }, [places, search, filterLocations, filterTypes, filterFoodTypes, filterKidFriendly, filterHappyHour, filterOutdoor, filterDinner, filterLunch, filterBrunch, filterDateNight, filterKidsAndBeers, filterOpenNow, openNowChecked, openNowCache, radiusMode, radiusCenter, radiusMiles]);
 
-  const hasActiveFilters = search || filterLocations.length > 0 || filterTypes.length > 0 || filterFoodTypes.length > 0 || filterKidFriendly || filterHappyHour || filterOutdoor || filterDinner || filterLunch || filterBrunch || filterDateNight || filterOpenNow || radiusMode;
+  const hasActiveFilters = search || filterLocations.length > 0 || filterTypes.length > 0 || filterFoodTypes.length > 0 || filterKidFriendly || filterHappyHour || filterOutdoor || filterDinner || filterLunch || filterBrunch || filterDateNight || filterKidsAndBeers || filterOpenNow || radiusMode;
 
   const clearFilters = () => {
     setSearch(""); setFilterLocations([]); setFilterTypes([]); setFilterFoodTypes([]);
     setFilterKidFriendly(false); setFilterHappyHour(false); setFilterOutdoor(false);
     setFilterDinner(false); setFilterLunch(false); setFilterBrunch(false);
-    setFilterDateNight(false); setFilterOpenNow(false); setOpenNowChecked(false); clearRadius();
+    setFilterDateNight(false); setFilterKidsAndBeers(false); setFilterOpenNow(false); setOpenNowChecked(false); clearRadius();
   };
 
   return (
@@ -1040,7 +1102,7 @@ function SpotFinder() {
               )}
               {user && (
                 <button
-                  onClick={() => { setEditingPlace({ name: "", location: "", type: "", foodType: "", kidFriendly: "", vibe: "", goodFor: "", happyHour: false, dinner: false, lunch: false, brunch: false, outdoor: false, notableOutdoor: false, notes: "", address: "", googlePlaceId: "", phone: "", website: "", lat: null, lng: null }); setExpandedId(null); }}
+                  onClick={() => { setEditingPlace({ name: "", location: "", type: "", foodType: "", kidFriendly: "", vibe: "", goodFor: "", happyHour: false, dinner: false, lunch: false, brunch: false, outdoor: false, notableOutdoor: false, dateNight: false, kidsAndBeers: false, notes: "", address: "", googlePlaceId: "", phone: "", website: "", lat: null, lng: null }); setExpandedId(null); }}
                   className="bg-gradient-to-r from-purple-600 to-pink-500 text-white text-xs font-bold px-3.5 py-1.5 rounded-full shadow-md hover:shadow-lg transition-all shrink-0"
                 >
                   + Add
@@ -1079,6 +1141,7 @@ function SpotFinder() {
             <Toggle label="Lunch" active={filterLunch} onClick={() => setFilterLunch(!filterLunch)} color="purple" />
             <Toggle label="Brunch" active={filterBrunch} onClick={() => setFilterBrunch(!filterBrunch)} color="rose" />
             <Toggle label="Date Night" active={filterDateNight} onClick={() => setFilterDateNight(!filterDateNight)} color="rose" />
+            <Toggle label="Kids & Beers" active={filterKidsAndBeers} onClick={() => setFilterKidsAndBeers(!filterKidsAndBeers)} color="blue" />
             {window.GOOGLE_MAPS_READY && (
               <Toggle label={openNowLoading ? "Checking..." : "Open Now"} active={filterOpenNow} onClick={() => { setFilterOpenNow(!filterOpenNow); if (filterOpenNow) { setOpenNowChecked(false); } }} color="blue" />
             )}
@@ -1211,6 +1274,11 @@ function SpotFinder() {
               <button onClick={handleExport} className="text-xs text-purple-400 hover:text-purple-600 font-medium hover:underline">
                 Export to Spreadsheet
               </button>
+              {user && needsTagMigration && (
+                <button onClick={handleTagMigration} disabled={tagging} className="text-xs text-rose-400 hover:text-rose-600 font-medium hover:underline disabled:opacity-50">
+                  {tagging ? tagProgress : "Apply Date Night & Kids Tags"}
+                </button>
+              )}
               {user && window.GOOGLE_MAPS_READY && places.some((p) => !p.lat || !p.lng || !p.googlePlaceId) && (
                 <button onClick={handleGeocodeAll} disabled={geocoding} className="text-xs text-blue-400 hover:text-blue-600 font-medium hover:underline disabled:opacity-50">
                   {geocoding ? geocodeProgress : "Add Coordinates & IDs (" + places.filter((p) => !p.lat || !p.lng || !p.googlePlaceId).length + " missing)"}
