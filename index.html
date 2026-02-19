@@ -221,6 +221,7 @@ const TYPE_COLORS = {
   "Brewery": "from-amber-500 to-yellow-600",
   "Bar": "from-rose-500 to-pink-600",
   "Food Court": "from-emerald-500 to-teal-600",
+  "Other": "from-gray-400 to-gray-500",
 };
 
 const TYPE_BG = {
@@ -228,6 +229,7 @@ const TYPE_BG = {
   "Brewery": "bg-amber-100 text-amber-700",
   "Bar": "bg-rose-100 text-rose-700",
   "Food Court": "bg-emerald-100 text-emerald-700",
+  "Other": "bg-gray-100 text-gray-700",
 };
 
 function haversine(lat1, lng1, lat2, lng2) {
@@ -382,6 +384,7 @@ function EditForm({ place, onSave, onCancel, locations, types, foodTypes, existi
         lunch: f.lunch || autoLunch,
         dinner: f.dinner || autoDinner,
         takeout: f.takeout || autoTakeout,
+        beer: f.beer || (autoType === "Brewery" || autoType === "Bar"),
         food: f.food || (autoType === "Restaurant" || autoType === "Food Court" ? "full" : ""),
       }));
     });
@@ -414,19 +417,21 @@ function EditForm({ place, onSave, onCancel, locations, types, foodTypes, existi
           <option value="">Location...</option>
           {locations.map((l) => <option key={l} value={l}>{l}</option>)}
         </select>
-        <select value={form.type || ""} onChange={(e) => set("type", e.target.value)} className="flex-1 border-2 border-purple-100 rounded-lg px-2 py-2 text-sm bg-white">
+        <select value={form.type || ""} onChange={(e) => { const v = e.target.value; set("type", v); if (v === "Brewery" || v === "Bar") set("beer", true); if (v !== "Restaurant" && v !== "Food Court") set("foodType", ""); }} className="flex-1 border-2 border-purple-100 rounded-lg px-2 py-2 text-sm bg-white">
           <option value="">Type...</option>
           {types.map((t) => <option key={t} value={t}>{t}</option>)}
         </select>
       </div>
 
-      {/* Row 3: Food Type */}
+      {/* Row 3: Food Type (only for Restaurant / Food Court) */}
+      {(form.type === "Restaurant" || form.type === "Food Court") && (
       <div className="flex gap-2">
         <select value={form.foodType || ""} onChange={(e) => set("foodType", e.target.value)} className="flex-1 border-2 border-purple-100 rounded-lg px-2 py-2 text-sm bg-white">
           <option value="">Food Type...</option>
           {foodTypes.map((f) => <option key={f} value={f}>{f}</option>)}
         </select>
       </div>
+      )}
 
       {/* Kid Friendly slider (No / Yes / Very) */}
       <div>
@@ -525,6 +530,7 @@ function EditForm({ place, onSave, onCancel, locations, types, foodTypes, existi
           { key: "dinner", label: "Dinner", color: "purple" },
           { key: "dateNight", label: "Date Night", color: "rose" },
           { key: "takeout", label: "🥡 Takeout", color: "orange" },
+          { key: "beer", label: "🍺 Beer", color: "amber" },
         ].map((t) => (
           <Toggle key={t.key} label={t.label} active={!!form[t.key]} onClick={() => set(t.key, !form[t.key])} color={t.color} />
         ))}
@@ -591,6 +597,7 @@ function PlaceRow({ place, isExpanded, onToggle, user, onEdit, onDelete, radiusM
   else if (place.outdoor) badges.push({ label: "Patio", color: "bg-teal-100 text-teal-700" });
   if (place.dateNight) badges.push({ label: "Date Night", color: "bg-rose-100 text-rose-700" });
   if (place.takeout) badges.push({ label: "🥡 Takeout", color: "bg-orange-100 text-orange-700" });
+  if (place.beer) badges.push({ label: "🍺 Beer", color: "bg-amber-100 text-amber-700" });
   if (place.food === "snacks") badges.push({ label: "Snacks Only", color: "bg-yellow-100 text-yellow-700" });
   else if (place.food === "no") badges.push({ label: "No Food", color: "bg-gray-100 text-gray-600" });
 
@@ -1084,6 +1091,22 @@ function SpotFinder() {
     alert("Type migration complete: " + updated + " places updated.");
   };
 
+  // === BEER FLAG MIGRATION ===
+  const needsBeerMigration = places.some((p) => p.beer === undefined && (p.type === "Brewery" || p.type === "Bar"));
+  const handleBeerMigration = async () => {
+    if (!user || !db) { alert("Sign in first."); return; }
+    let updated = 0;
+    for (const p of places) {
+      if (!p._docId || p.beer !== undefined) continue;
+      const shouldBeer = p.type === "Brewery" || p.type === "Bar";
+      try {
+        await db.collection("restaurants").doc(p._docId).update({ beer: shouldBeer });
+        updated++;
+      } catch (e) { console.warn("Failed to set beer flag:", p.name, e); }
+    }
+    alert("Beer migration complete: " + updated + " places updated.");
+  };
+
   // === LOCATION CONSOLIDATION MIGRATION ===
   const BOULDER_LOCATIONS = ["Central Boulder", "Downtown", "East Boulder", "North Boulder", "South Boulder", "The Hill"];
   const needsLocationMigration = places.some((p) => BOULDER_LOCATIONS.includes(p.location));
@@ -1349,7 +1372,7 @@ function SpotFinder() {
 
   // === EXPORT TO SPREADSHEET ===
   const handleExport = () => {
-    const headers = ["Name", "Location", "Type", "Food Type", "Kid Friendly", "Food", "Vibe", "Good For", "Happy Hour", "Dinner", "Lunch", "Breakfast/Brunch", "Has Outdoor Space", "Notable Outdoor Space", "Date Night", "Kids & Beers", "Takeout", "Notes", "Address", "Phone", "Website"];
+    const headers = ["Name", "Location", "Type", "Food Type", "Kid Friendly", "Food", "Vibe", "Good For", "Happy Hour", "Dinner", "Lunch", "Breakfast/Brunch", "Has Outdoor Space", "Notable Outdoor Space", "Date Night", "Kids & Beers", "Takeout", "Beer", "Notes", "Address", "Phone", "Website"];
     const rows = places.map((p) => [
       p.name || "", p.location || "", p.type || "", p.foodType || "",
       p.kidFriendly === "very" ? "Very" : p.kidFriendly === "yes" ? "Y" : p.kidFriendly === "maybe" ? "Maybe" : p.kidFriendly === "no" ? "N" : "",
@@ -1357,7 +1380,7 @@ function SpotFinder() {
       p.vibe || "", p.goodFor || "",
       p.happyHour ? "Y" : "N", p.dinner ? "Y" : "N", p.lunch ? "Y" : "N", p.brunch ? "Y" : "N",
       p.outdoor ? "Y" : "N", p.notableOutdoor ? "Y" : "N",
-      p.dateNight ? "Y" : "N", p.kidsAndBeers ? "Y" : "N", p.takeout ? "Y" : "N",
+      p.dateNight ? "Y" : "N", p.kidsAndBeers ? "Y" : "N", p.takeout ? "Y" : "N", p.beer ? "Y" : "N",
       p.notes || "", p.address || "", p.phone || "", p.website || ""
     ]);
     const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
@@ -1369,7 +1392,7 @@ function SpotFinder() {
   };
 
   const locations = useMemo(() => [...new Set(places.map((p) => p.location).filter(Boolean))].sort(), [places]);
-  const types = useMemo(() => [...new Set(places.map((p) => p.type).filter(Boolean))].sort(), [places]);
+  const types = useMemo(() => [...new Set([...places.map((p) => p.type).filter(Boolean), "Other"])].sort(), [places]);
   const foodTypes = useMemo(() => [...new Set(places.map((p) => p.foodType).filter(Boolean))].sort(), [places]);
 
   const filtered = useMemo(() => {
@@ -1383,7 +1406,7 @@ function SpotFinder() {
       if (filterTypes.length > 0 && !filterTypes.includes(p.type)) return false;
       if (filterFoodTypes.length > 0 && !filterFoodTypes.includes(p.foodType)) return false;
       if (filterKidFriendly && p.kidFriendly !== "yes" && p.kidFriendly !== "maybe" && p.kidFriendly !== "very") return false;
-      if (filterBeer && p.type !== "Brewery" && p.type !== "Bar") return false;
+      if (filterBeer && !p.beer) return false;
       if (filterOutdoor && !p.outdoor) return false;
       if (filterDinner && !p.dinner) return false;
       if (filterLunch && !p.lunch) return false;
@@ -1449,7 +1472,7 @@ function SpotFinder() {
               )}
               {user && (
                 <button
-                  onClick={() => { setEditingPlace({ name: "", location: "", type: "", foodType: "", kidFriendly: "no", food: "", vibe: "", goodFor: "", happyHour: false, dinner: false, lunch: false, brunch: false, outdoor: false, notableOutdoor: false, dateNight: false, kidsAndBeers: false, takeout: false, notes: "", address: "", googlePlaceId: "", phone: "", website: "", lat: null, lng: null }); setExpandedId(null); }}
+                  onClick={() => { setEditingPlace({ name: "", location: "", type: "", foodType: "", kidFriendly: "no", food: "", vibe: "", goodFor: "", happyHour: false, dinner: false, lunch: false, brunch: false, outdoor: false, notableOutdoor: false, dateNight: false, kidsAndBeers: false, takeout: false, beer: false, notes: "", address: "", googlePlaceId: "", phone: "", website: "", lat: null, lng: null }); setExpandedId(null); }}
                   className="bg-gradient-to-r from-purple-600 to-pink-500 text-white text-xs font-bold px-3.5 py-1.5 rounded-full shadow-md hover:shadow-lg transition-all shrink-0"
                 >
                   + Add
@@ -1682,6 +1705,11 @@ function SpotFinder() {
               {user && needsTypeMigration && (
                 <button onClick={handleTypeMigration} className="text-xs text-amber-400 hover:text-amber-600 font-medium hover:underline">
                   Consolidate Types ({places.filter((p) => OLD_TYPES.includes(p.type)).length} to update)
+                </button>
+              )}
+              {user && needsBeerMigration && (
+                <button onClick={handleBeerMigration} className="text-xs text-amber-400 hover:text-amber-600 font-medium hover:underline">
+                  Set Beer Flags ({places.filter((p) => p.beer === undefined).length} to update)
                 </button>
               )}
               {user && window.GOOGLE_MAPS_READY && (
