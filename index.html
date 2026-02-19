@@ -438,9 +438,41 @@ function EditForm({ place, onSave, onCancel, locations, types, foodTypes, existi
 }
 
 function PlaceRow({ place, isExpanded, onToggle, user, onEdit, onDelete, radiusMode, radiusCenter, openStatus }) {
-  const isClosed = openStatus === false;
+  const isClosed = openStatus && openStatus.isOpen === false;
   const gradient = TYPE_COLORS[place.type] || "from-gray-400 to-gray-500";
   const typeBg = TYPE_BG[place.type] || "bg-gray-100 text-gray-700";
+
+  // Compute "next open" label for closed places
+  const getNextOpenLabel = () => {
+    if (!openStatus || !isClosed) return null;
+    if (openStatus.permClosed) return "Permanently Closed";
+    if (!openStatus.periods || openStatus.periods.length === 0) return "Closed";
+    const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const now = new Date();
+    const day = now.getDay();
+    const timeNow = now.getHours() * 100 + now.getMinutes();
+    // Look for next opening: check rest of today, then next 7 days
+    for (let offset = 0; offset < 7; offset++) {
+      const checkDay = (day + offset) % 7;
+      const dayPeriods = openStatus.periods.filter((pr) => pr.open && pr.open.day === checkDay);
+      for (const pr of dayPeriods) {
+        const openTime = pr.open.hours * 100 + pr.open.minutes;
+        // Skip periods earlier today that already passed
+        if (offset === 0 && openTime <= timeNow) continue;
+        // Format the time
+        const h = pr.open.hours;
+        const m = pr.open.minutes;
+        const ampm = h >= 12 ? "PM" : "AM";
+        const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+        const timeStr = m > 0 ? h12 + ":" + String(m).padStart(2, "0") + " " + ampm : h12 + " " + ampm;
+        if (offset === 0) return "Opens " + timeStr;
+        if (offset === 1) return "Opens tomorrow " + timeStr;
+        return "Opens " + DAY_NAMES[checkDay] + " " + timeStr;
+      }
+    }
+    return "Closed";
+  };
+  const closedLabel = getNextOpenLabel();
 
   const badges = [];
   if (place.kidFriendly === "very") badges.push({ label: "🛝 Super Kid-Friendly", color: "bg-emerald-200 text-emerald-800" });
@@ -471,7 +503,7 @@ function PlaceRow({ place, isExpanded, onToggle, user, onEdit, onDelete, radiusM
       >
         <div className={`w-1 h-6 rounded-full bg-gradient-to-b ${gradient} shrink-0`} />
         <span className={`text-sm font-bold truncate flex-1 text-left ${isClosed ? "text-gray-400 italic" : "text-gray-800"}`}>{place.name}</span>
-            {isClosed && <span className="text-[10px] font-bold text-red-400 bg-red-50 px-1.5 py-0.5 rounded-full shrink-0">Closed</span>}
+            {isClosed && <span className="text-[10px] font-bold text-red-400 bg-red-50 px-1.5 py-0.5 rounded-full shrink-0">{closedLabel}</span>}
             {radiusMode && radiusCenter && place.lat && place.lng && (
               <span className="text-[10px] font-bold text-blue-500 bg-blue-50 px-2 py-0.5 rounded-full shrink-0">
                 {haversine(radiusCenter.lat, radiusCenter.lng, place.lat, place.lng).toFixed(1)} mi
@@ -1105,11 +1137,18 @@ function SpotFinder() {
           console.log("[Open Now]", p.name, "→ UNKNOWN (no opening_hours data)", "business_status:", details.business_status);
         }
 
-        newCache[p.googlePlaceId] = { isOpen, checkedAt: Date.now() };
+        const periods = (details.opening_hours && details.opening_hours.periods) ? details.opening_hours.periods : null;
+        const permClosed = details.business_status === "CLOSED_TEMPORARILY" || details.business_status === "CLOSED_PERMANENTLY";
+        newCache[p.googlePlaceId] = { isOpen, checkedAt: Date.now(), periods, permClosed: permClosed || false };
       } catch (err) {
         // If we can't check, mark as unknown
         console.warn("[Open Now]", p.name, "→ ERROR:", err);
-        newCache[p.googlePlaceId] = { isOpen: null, checkedAt: Date.now() };
+        newCache[p.googlePlaceId] = { isOpen: null, checkedAt: Date.now(), periods: null, permClosed: false };
+      }
+
+      // Update UI every 10 places so results appear progressively
+      if ((i + 1) % 10 === 0 || i === placesToCheck.length - 1) {
+        setOpenNowCache({ ...newCache });
       }
 
       // Small delay between API calls to avoid rate limits
@@ -1118,8 +1157,11 @@ function SpotFinder() {
       }
     }
 
-    console.log("[Open Now] Done.", Object.keys(newCache).length, "checked.", Object.entries(newCache).filter(([k,v]) => v.isOpen === false).length, "closed,", Object.entries(newCache).filter(([k,v]) => v.isOpen === true).length, "open,", Object.entries(newCache).filter(([k,v]) => v.isOpen === null).length, "unknown");
-    setOpenNowCache(newCache);
+    const openCount = Object.entries(newCache).filter(([k,v]) => v.isOpen === true).length;
+    const closedCount = Object.entries(newCache).filter(([k,v]) => v.isOpen === false).length;
+    const unknownCount = Object.entries(newCache).filter(([k,v]) => v.isOpen === null).length;
+    console.log("[Open Now] Done.", Object.keys(newCache).length, "checked.", closedCount, "closed,", openCount, "open,", unknownCount, "unknown");
+    setOpenNowCache({ ...newCache });
     setOpenNowChecked(true);
 
   }, [places, openNowCache]);
@@ -1435,7 +1477,7 @@ function SpotFinder() {
               onDelete={deletePlace}
               radiusMode={radiusMode}
               radiusCenter={radiusCenter}
-              openStatus={place.googlePlaceId && openNowCache[place.googlePlaceId] ? openNowCache[place.googlePlaceId].isOpen : null}
+              openStatus={place.googlePlaceId && openNowCache[place.googlePlaceId] ? openNowCache[place.googlePlaceId] : null}
             />
           ))
         )}
