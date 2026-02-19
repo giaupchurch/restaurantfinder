@@ -285,12 +285,79 @@ function EditForm({ place, onSave, onCancel, locations, types, foodTypes, existi
     const ac = new google.maps.places.Autocomplete(nameInputRef.current, {
       types: ["establishment"],
       componentRestrictions: { country: "us" },
-      fields: ["name", "formatted_address", "geometry", "place_id", "formatted_phone_number", "website", "opening_hours", "photos"]
+      fields: ["name", "formatted_address", "geometry", "place_id", "formatted_phone_number", "website", "opening_hours", "photos", "types", "address_components"]
     });
 
     ac.addListener("place_changed", () => {
       const p = ac.getPlace();
       if (!p || !p.name) return;
+      const gTypes = p.types || [];
+      console.log("[AutoFill] Google types for", p.name, ":", gTypes);
+
+      // --- Auto-detect Location from address_components ---
+      let autoLocation = "";
+      if (p.address_components) {
+        const locality = p.address_components.find((c) => c.types.includes("locality"));
+        const sublocality = p.address_components.find((c) => c.types.includes("sublocality"));
+        const city = (locality && locality.long_name) || (sublocality && sublocality.long_name) || "";
+        // Map to existing app locations
+        const cityMap = {
+          "Boulder": "Boulder", "Louisville": "Louisville", "Lafayette": "Lafayette",
+          "Erie": "Erie", "Longmont": "Longmont", "Superior": "Superior",
+          "Broomfield": "Broomfield", "Niwot": "Niwot", "Lyons": "Lyons",
+          "Golden": "Golden", "Arvada": "Arvada", "Denver": "Denver",
+          "Gunbarrel": "Gunbarrel", "Nederland": "Nederland"
+        };
+        autoLocation = cityMap[city] || city || "";
+      }
+
+      // --- Auto-detect Type from Google types ---
+      let autoType = "";
+      const hasType = (t) => gTypes.includes(t);
+      if (hasType("brewery")) {
+        autoType = (hasType("restaurant") || hasType("food")) ? "Brewery & Restaurant" : "Brewery";
+      } else if (hasType("bar") && (hasType("restaurant") || hasType("food"))) {
+        autoType = "Bar & Restaurant";
+      } else if (hasType("bar") || hasType("night_club")) {
+        autoType = "Bar";
+      } else if (hasType("meal_takeaway") || hasType("meal_delivery")) {
+        autoType = "Takeout";
+      } else if (hasType("bakery")) {
+        autoType = "Takeout";
+      } else if (hasType("restaurant") || hasType("food") || hasType("cafe")) {
+        autoType = "Restaurant";
+      }
+
+      // --- Auto-detect Food Type from Google types ---
+      let autoFoodType = "";
+      const foodTypeMap = {
+        "chinese_restaurant": "Chinese", "mexican_restaurant": "Mexican",
+        "italian_restaurant": "Italian", "thai_restaurant": "Thai",
+        "japanese_restaurant": "Japanese/Sushi", "indian_restaurant": "Indian",
+        "pizza_restaurant": "Pizza", "french_restaurant": "French",
+        "sushi_restaurant": "Japanese/Sushi", "korean_restaurant": "Korean",
+        "vietnamese_restaurant": "Vietnamese", "greek_restaurant": "Greek",
+        "mediterranean_restaurant": "Mediterranean", "american_restaurant": "American",
+        "seafood_restaurant": "Seafood", "steak_house": "American",
+        "hamburger_restaurant": "Burgers", "sandwich_shop": "Deli",
+        "ramen_restaurant": "Asian", "barbecue_restaurant": "BBQ",
+      };
+      for (const [gType, appType] of Object.entries(foodTypeMap)) {
+        if (hasType(gType)) { autoFoodType = appType; break; }
+      }
+      // Fallback guesses
+      if (!autoFoodType) {
+        if (hasType("brewery")) autoFoodType = "Brewery";
+        else if (hasType("cafe") || hasType("coffee_shop") || hasType("breakfast_restaurant")) autoFoodType = "Brunch/Cafe";
+        else if (hasType("bakery")) autoFoodType = "Bakery";
+        else if (hasType("ice_cream_shop")) autoFoodType = "Dessert";
+      }
+
+      // --- Auto-detect meal toggles ---
+      let autoBrunch = hasType("cafe") || hasType("breakfast_restaurant") || hasType("brunch_restaurant") || hasType("coffee_shop");
+      let autoLunch = hasType("restaurant") || hasType("cafe") || hasType("food") || hasType("meal_takeaway");
+      let autoDinner = hasType("restaurant") || hasType("bar") || hasType("food") || hasType("night_club");
+
       setForm((f) => ({
         ...f,
         name: p.name || f.name,
@@ -300,6 +367,13 @@ function EditForm({ place, onSave, onCancel, locations, types, foodTypes, existi
         website: p.website || "",
         lat: p.geometry && p.geometry.location ? p.geometry.location.lat() : null,
         lng: p.geometry && p.geometry.location ? p.geometry.location.lng() : null,
+        // Only auto-fill if field is currently empty/default
+        location: f.location || autoLocation,
+        type: f.type || autoType,
+        foodType: f.foodType || autoFoodType,
+        brunch: f.brunch || autoBrunch,
+        lunch: f.lunch || autoLunch,
+        dinner: f.dinner || autoDinner,
       }));
     });
     autocompleteRef.current = ac;
@@ -502,8 +576,8 @@ function PlaceRow({ place, isExpanded, onToggle, user, onEdit, onDelete, radiusM
         }`}
       >
         <div className={`w-1 h-6 rounded-full bg-gradient-to-b ${gradient} shrink-0`} />
-        <span className={`text-sm font-bold truncate flex-1 text-left ${isClosed ? "text-gray-400 italic" : "text-gray-800"}`}>{place.name}</span>
-            {isClosed && <span className="text-[10px] font-bold text-red-400 bg-red-50 px-1.5 py-0.5 rounded-full shrink-0">{closedLabel}</span>}
+        <span className={`text-sm font-bold truncate flex-1 text-left text-gray-800 ${isClosed ? "italic" : ""}`}>{place.name}</span>
+            {isClosed && <span className="text-[10px] font-bold text-gray-700 bg-gray-100 px-1.5 py-0.5 rounded-full shrink-0">{closedLabel}</span>}
             {radiusMode && radiusCenter && place.lat && place.lng && (
               <span className="text-[10px] font-bold text-blue-500 bg-blue-50 px-2 py-0.5 rounded-full shrink-0">
                 {haversine(radiusCenter.lat, radiusCenter.lng, place.lat, place.lng).toFixed(1)} mi
