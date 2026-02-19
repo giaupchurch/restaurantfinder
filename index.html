@@ -42,6 +42,8 @@
   <style>
     /* Prevent FOUC while Babel compiles */
     #root { min-height: 100vh; }
+    /* Prevent iOS Safari zoom on input focus — must be 16px+ */
+    input, select, textarea { font-size: 16px !important; }
   </style>
 </head>
 <body>
@@ -774,8 +776,12 @@ function SpotFinder() {
     }
 
     // Find restaurants needing coordinates OR missing googlePlaceId
-    const needsWork = places.filter((p) => !p.lat || !p.lng || !p.googlePlaceId);
-    if (needsWork.length === 0) { alert("All restaurants already have coordinates and place IDs!"); return; }
+    let needsWork = places.filter((p) => !p.lat || !p.lng || !p.googlePlaceId);
+    if (needsWork.length === 0) {
+      // Re-check all places (useful if placeIds weren't saved previously)
+      if (!confirm("All places appear to have data. Re-check all " + places.length + " places? This may take a few minutes.")) return;
+      needsWork = places.filter((p) => p._docId);
+    }
 
     setGeocoding(true);
     setGeocodeProgress("Starting...");
@@ -1234,35 +1240,34 @@ function SpotFinder() {
             </div>
           </div>
 
-          {/* Row 1: Type of Place + Search */}
-          <div className="flex gap-2 items-center mb-2">
-            <MultiSelect label="Type" allLabel="All Types" options={types} selected={filterTypes} onChange={setFilterTypes} />
+          {/* Row 1: Search */}
+          <div className="mb-2">
             <input
               type="text"
               placeholder="Search..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="flex-1 border-2 border-purple-100 rounded-xl px-3 py-1.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent bg-white"
+              className="w-full border-2 border-purple-100 rounded-xl px-3 py-1.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent bg-white"
             />
           </div>
 
-          {/* Row 2: Location + Food Type */}
-          <div className="flex gap-2 items-center mb-2">
+          {/* Row 2: Dropdowns + emoji toggles */}
+          <div className="flex gap-1.5 items-center mb-2">
+            <MultiSelect label="Type" allLabel="All Types" options={types} selected={filterTypes} onChange={setFilterTypes} />
             <MultiSelect label="Location" allLabel="All Locations" options={locations} selected={filterLocations} onChange={setFilterLocations} />
             <MultiSelect label="Food" allLabel="All Food Types" options={foodTypes} selected={filterFoodTypes} onChange={setFilterFoodTypes} />
+            <Toggle label="👶" active={filterKidFriendly} onClick={() => setFilterKidFriendly(!filterKidFriendly)} color="green" />
+            <Toggle label="🌳" active={filterOutdoor} onClick={() => setFilterOutdoor(!filterOutdoor)} color="teal" />
+            <Toggle label="🍷" active={filterDateNight} onClick={() => setFilterDateNight(!filterDateNight)} color="rose" />
           </div>
 
-          {/* Row 3: Toggles + Add */}
+          {/* Row 3: Meal toggles + special filters */}
           <div className="flex items-center gap-1.5 flex-wrap">
-            <Toggle label="👶" active={filterKidFriendly} onClick={() => setFilterKidFriendly(!filterKidFriendly)} color="green" />
-            <Toggle label="Happy Hour" active={filterHappyHour} onClick={() => setFilterHappyHour(!filterHappyHour)} color="amber" />
-            <Toggle label="🌳" active={filterOutdoor} onClick={() => setFilterOutdoor(!filterOutdoor)} color="teal" />
             <Toggle label="Brunch" active={filterBrunch} onClick={() => setFilterBrunch(!filterBrunch)} color="rose" />
             <Toggle label="Lunch" active={filterLunch} onClick={() => setFilterLunch(!filterLunch)} color="purple" />
             <Toggle label="Dinner" active={filterDinner} onClick={() => setFilterDinner(!filterDinner)} color="purple" />
-            <Toggle label="🍷" active={filterDateNight} onClick={() => setFilterDateNight(!filterDateNight)} color="rose" />
+            <Toggle label="Happy Hour" active={filterHappyHour} onClick={() => setFilterHappyHour(!filterHappyHour)} color="amber" />
             <Toggle label="Kids & Beers" active={filterKidsAndBeers} onClick={() => setFilterKidsAndBeers(!filterKidsAndBeers)} color="blue" />
-
             {hasActiveFilters && (
               <button onClick={clearFilters} className="text-xs font-bold text-purple-500 hover:text-purple-700 ml-1">
                 Clear
@@ -1447,9 +1452,12 @@ function SpotFinder() {
                   {tagging ? tagProgress : "Apply Date Night & Kids Tags"}
                 </button>
               )}
-              {user && window.GOOGLE_MAPS_READY && places.some((p) => !p.lat || !p.lng || !p.googlePlaceId) && (
+              {user && window.GOOGLE_MAPS_READY && (
                 <button onClick={handleGeocodeAll} disabled={geocoding} className="text-xs text-blue-400 hover:text-blue-600 font-medium hover:underline disabled:opacity-50">
-                  {geocoding ? geocodeProgress : "Add Coordinates & IDs (" + places.filter((p) => !p.lat || !p.lng || !p.googlePlaceId).length + " missing)"}
+                  {geocoding ? geocodeProgress : (() => {
+                    const missing = places.filter((p) => !p.lat || !p.lng || !p.googlePlaceId);
+                    return missing.length > 0 ? "Add Coordinates & IDs (" + missing.length + " need updating)" : "Re-check All Coordinates & IDs";
+                  })()}
                 </button>
               )}
             </div>
