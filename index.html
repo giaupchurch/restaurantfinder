@@ -1070,19 +1070,42 @@ function SpotFinder() {
         let isOpen = null; // null = unknown
         if (details.business_status === "CLOSED_TEMPORARILY" || details.business_status === "CLOSED_PERMANENTLY") {
           isOpen = false;
+          console.log("[Open Now]", p.name, "→ permanently/temporarily closed (business_status:", details.business_status + ")");
         } else if (details.opening_hours && typeof details.opening_hours.isOpen === "function") {
           isOpen = details.opening_hours.isOpen();
+          console.log("[Open Now]", p.name, "→", isOpen ? "OPEN" : "CLOSED", "(via isOpen())");
+        } else if (details.opening_hours && details.opening_hours.periods) {
+          // Fallback: manually check periods if isOpen() not available
+          const now = new Date();
+          const day = now.getDay(); // 0=Sun
+          const timeNow = now.getHours() * 100 + now.getMinutes();
+          const todayPeriods = details.opening_hours.periods.filter((period) => period.open && period.open.day === day);
+          if (todayPeriods.length === 0) {
+            isOpen = false;
+          } else {
+            isOpen = todayPeriods.some((period) => {
+              const openTime = period.open.hours * 100 + period.open.minutes;
+              const closeTime = period.close ? period.close.hours * 100 + period.close.minutes : 2400;
+              // Handle overnight (close time on next day)
+              if (period.close && period.close.day !== day) return timeNow >= openTime;
+              return timeNow >= openTime && timeNow < closeTime;
+            });
+          }
+          console.log("[Open Now]", p.name, "→", isOpen ? "OPEN" : "CLOSED", "(via periods fallback, day:", day, "time:", timeNow + ")");
+        } else {
+          console.log("[Open Now]", p.name, "→ UNKNOWN (no opening_hours data)", "business_status:", details.business_status);
         }
 
         newCache[p.googlePlaceId] = { isOpen, checkedAt: Date.now() };
       } catch (err) {
         // If we can't check, mark as unknown
+        console.warn("[Open Now]", p.name, "→ ERROR:", err);
         newCache[p.googlePlaceId] = { isOpen: null, checkedAt: Date.now() };
       }
 
-      // Small delay between API calls
+      // Small delay between API calls to avoid rate limits
       if (i < placesToCheck.length - 1) {
-        await new Promise((r) => setTimeout(r, 150));
+        await new Promise((r) => setTimeout(r, 300));
       }
     }
 
