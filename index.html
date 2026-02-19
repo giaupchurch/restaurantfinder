@@ -148,8 +148,6 @@ const PLACES = [
   { id: 74, name: "Lucky Pie", location: "Louisville", type: "Restaurant", foodType: "Pizza", kidFriendly: "yes", vibe: "Casual Neapolitan pizzeria with craft beer", goodFor: "Pizza, casual family dinner", happyHour: false, dinner: true, lunch: true, brunch: false, outdoor: true, notableOutdoor: false, notes: "" },
   { id: 75, name: "Marigold", location: "Lyons", type: "Restaurant", foodType: "Italian", kidFriendly: "maybe", vibe: "French-Italian fusion", goodFor: "Special occasion, date night, wine", happyHour: false, dinner: true, lunch: false, brunch: false, outdoor: false, notableOutdoor: false, notes: "" },
   { id: 76, name: "Mateo", location: "Downtown", type: "Restaurant", foodType: "French", kidFriendly: "maybe", vibe: "Cozy upscale French-Provencal bistro", goodFor: "Date night, French cuisine", happyHour: true, dinner: true, lunch: false, brunch: true, outdoor: true, notableOutdoor: false, notes: "delicious, upscale place, used to have a GREAT happy hour with food and wine specials, not sure if they still do it. Lovely patio!!" },
-  { id: 75, name: "Marigold", location: "Lyons", type: "Restaurant", foodType: "Italian", kidFriendly: "maybe", vibe: "French-Italian fusion", goodFor: "Special occasion, date night, wine", happyHour: false, dinner: true, lunch: false, brunch: false, outdoor: false, notableOutdoor: false, notes: "" },
-  { id: 76, name: "Mateo", location: "Boulder", type: "Restaurant", foodType: "French", kidFriendly: "maybe", vibe: "Cozy upscale French-Provencal bistro", goodFor: "Date night, French cuisine", happyHour: true, dinner: true, lunch: false, brunch: true, outdoor: true, notableOutdoor: false, notes: "delicious, upscale place, used to have a GREAT happy hour with food and wine specials, not sure if they still do it. Lovely patio!!" },
   { id: 77, name: "McDevitts Tacos", location: "Boulder", type: "Restaurant", foodType: "Mexican", kidFriendly: "yes", vibe: "cozy trendy casual", goodFor: "Quick lunch, creative tacos", happyHour: true, dinner: true, lunch: true, brunch: false, outdoor: true, notableOutdoor: false, notes: "Great margs and queso, tasty tacos, affordable and laid back" },
   { id: 80, name: "New Terrain Brewing", location: "Golden", type: "Brewery", foodType: "Brewery", kidFriendly: "maybe", vibe: "Brewpub with scenic mountain views and beer garden", goodFor: "Craft beer, casual dining, scenic views", happyHour: false, dinner: true, lunch: true, brunch: false, outdoor: true, notableOutdoor: true, notes: "" },
   { id: 81, name: "Niwot Tavern", location: "Niwot", type: "Restaurant", foodType: "American", kidFriendly: "maybe", vibe: "Casual neighborhood bar and grill", goodFor: "Casual dining, specials", happyHour: true, dinner: true, lunch: true, brunch: true, outdoor: false, notableOutdoor: false, notes: "" },
@@ -197,7 +195,6 @@ const PLACES = [
   { id: 123, name: "Tierra y Fuego Taqueria", location: "North Boulder", type: "Restaurant", foodType: "Mexican", kidFriendly: "yes", vibe: "Casual authentic Mexican", goodFor: "Quick meals, breakfast burritos, lunch", happyHour: false, dinner: true, lunch: true, brunch: true, outdoor: false, notableOutdoor: false, notes: "" },
   { id: 124, name: "Tiffins India Cafe", location: "Central Boulder", type: "Takeout", foodType: "Indian", kidFriendly: "maybe", vibe: "Casual Indian takeout", goodFor: "take out", happyHour: false, dinner: true, lunch: true, brunch: false, outdoor: false, notableOutdoor: false, notes: "" },
   { id: 125, name: "Tip Top Pies", location: "Lafayette", type: "Restaurant", foodType: "Other", kidFriendly: "yes", vibe: "New Zealand pies", goodFor: "Quick lunch, pastries, pies", happyHour: false, dinner: true, lunch: true, brunch: false, outdoor: false, notableOutdoor: false, notes: "" },
-  { id: 126, name: "Twisted Pine Brewing", location: "Central Boulder", type: "Brewery & Restaurant", foodType: "Pizza", kidFriendly: "yes", vibe: "Neighborhood brewery with pizza", goodFor: "Craft beer, pizza, casual hangout", happyHour: false, dinner: true, lunch: false, brunch: false, outdoor: true, notableOutdoor: false, notes: "" },
   { id: 126, name: "Twisted Pine Brewing", location: "Boulder", type: "Brewery & Restaurant", foodType: "Pizza", kidFriendly: "yes", vibe: "Neighborhood brewery with pizza", goodFor: "Craft beer, pizza, casual hangout", happyHour: false, dinner: true, lunch: false, brunch: false, outdoor: true, notableOutdoor: false, notes: "" },
   { id: 127, name: "Upslope", location: "Boulder", type: "Brewery", foodType: "Burgers", kidFriendly: "yes", vibe: "Craft brewery with mountain views", goodFor: "Beer tasting, casual hangout", happyHour: true, dinner: true, lunch: false, brunch: false, outdoor: true, notableOutdoor: false, notes: "Burger joint closes before brewery!! Be careful about going there hungry. Burgers are good though!" },
   { id: 128, name: "Urban Field Pizza", location: "Longmont", type: "Restaurant", foodType: "Pizza", kidFriendly: "yes", vibe: "Casual pizza and market restaurant", goodFor: "Pizza, lunch, market items", happyHour: false, dinner: true, lunch: true, brunch: false, outdoor: false, notableOutdoor: false, notes: "" },
@@ -413,12 +410,12 @@ function EditForm({ place, onSave, onCancel, locations, types, foodTypes, existi
       {/* Row 4: Toggle buttons */}
       <div className="flex flex-wrap gap-1.5">
         {[
-          { key: "happyHour", label: "Happy Hour", color: "amber" },
-          { key: "dinner", label: "Dinner", color: "purple" },
-          { key: "lunch", label: "Lunch", color: "purple" },
           { key: "brunch", label: "Brunch", color: "rose" },
-          { key: "dateNight", label: "Date Night", color: "rose" },
+          { key: "lunch", label: "Lunch", color: "purple" },
+          { key: "dinner", label: "Dinner", color: "purple" },
+          { key: "happyHour", label: "Happy Hour", color: "amber" },
           { key: "kidsAndBeers", label: "Kids & Beers", color: "blue" },
+          { key: "dateNight", label: "Date Night", color: "rose" },
         ].map((t) => (
           <Toggle key={t.key} label={t.label} active={!!form[t.key]} onClick={() => set(t.key, !form[t.key])} color={t.color} />
         ))}
