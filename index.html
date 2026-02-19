@@ -422,7 +422,8 @@ function EditForm({ place, onSave, onCancel, locations, types, foodTypes, existi
   );
 }
 
-function PlaceRow({ place, isExpanded, onToggle, user, onEdit, onDelete, radiusMode, radiusCenter }) {
+function PlaceRow({ place, isExpanded, onToggle, user, onEdit, onDelete, radiusMode, radiusCenter, openStatus }) {
+  const isClosed = openStatus === false;
   const gradient = TYPE_COLORS[place.type] || "from-gray-400 to-gray-500";
   const typeBg = TYPE_BG[place.type] || "bg-gray-100 text-gray-700";
 
@@ -447,11 +448,14 @@ function PlaceRow({ place, isExpanded, onToggle, user, onEdit, onDelete, radiusM
         className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl transition-all ${
           isExpanded
             ? "bg-white shadow-md ring-2 ring-purple-100"
-            : "bg-white shadow-sm hover:shadow-md"
+            : isClosed
+              ? "bg-gray-50 shadow-sm hover:shadow-md"
+              : "bg-white shadow-sm hover:shadow-md"
         }`}
       >
         <div className={`w-1 h-6 rounded-full bg-gradient-to-b ${gradient} shrink-0`} />
-        <span className="text-sm font-bold text-gray-800 truncate flex-1 text-left">{place.name}</span>
+        <span className={`text-sm font-bold truncate flex-1 text-left ${isClosed ? "text-gray-400 italic" : "text-gray-800"}`}>{place.name}</span>
+            {isClosed && <span className="text-[10px] font-bold text-red-400 bg-red-50 px-1.5 py-0.5 rounded-full shrink-0">Closed</span>}
             {radiusMode && radiusCenter && place.lat && place.lng && (
               <span className="text-[10px] font-bold text-blue-500 bg-blue-50 px-2 py-0.5 rounded-full shrink-0">
                 {haversine(radiusCenter.lat, radiusCenter.lng, place.lat, place.lng).toFixed(1)} mi
@@ -614,8 +618,6 @@ function SpotFinder() {
   const [filterBrunch, setFilterBrunch] = useState(false);
   const [filterDateNight, setFilterDateNight] = useState(false);
   const [filterKidsAndBeers, setFilterKidsAndBeers] = useState(false);
-  const [filterOpenNow, setFilterOpenNow] = useState(false);
-  const [openNowLoading, setOpenNowLoading] = useState(false);
   const [openNowCache, setOpenNowCache] = useState({}); // { placeId: { isOpen: bool, checkedAt: timestamp } }
   const [openNowChecked, setOpenNowChecked] = useState(false); // true once we've checked hours
   const [showForm, setShowForm] = useState(false);
@@ -628,6 +630,11 @@ function SpotFinder() {
   const [geoError, setGeoError] = useState("");
   const addressInputRef = useRef(null);
   const addressAcRef = useRef(null);
+
+  // === GOOGLE NEARBY RESULTS ===
+  const [nearbyResults, setNearbyResults] = useState([]);
+  const [nearbyLoading, setNearbyLoading] = useState(false);
+  const [nearbyShown, setNearbyShown] = useState(false);
 
   // === FIREBASE AUTH ===
   useEffect(() => {
@@ -885,12 +892,17 @@ function SpotFinder() {
       }
     }
 
-    setTagProgress("Done! Tagged " + updated + " places.");
     setTagging(false);
+    if (updated > 0) {
+      setTagProgress("Done! Tagged " + updated + " places.");
+    } else {
+      setTagProgress("No new tags to apply — all places are already tagged.");
+    }
+    alert("Tag migration complete: " + updated + " places updated.");
   };
 
   // Check if migration is needed (any places missing the new fields)
-  const needsTagMigration = places.some((p) => p.dateNight === undefined && p.kidsAndBeers === undefined);
+  const needsTagMigration = places.some((p) => p.dateNight === undefined || p.kidsAndBeers === undefined);
 
   // === LOCATION CONSOLIDATION MIGRATION ===
   const BOULDER_LOCATIONS = ["Central Boulder", "Downtown", "East Boulder", "North Boulder", "South Boulder", "The Hill"];
@@ -913,11 +925,91 @@ function SpotFinder() {
     alert("Updated " + updated + " places to 'Boulder' location.");
   };
 
+  // === GOOGLE NEARBY SEARCH ===
+  const searchNearby = useCallback(async () => {
+    if (!radiusCenter || !window.google || !window.google.maps || !window.google.maps.places) return;
+    setNearbyLoading(true);
+
+    let serviceDiv = document.getElementById("places-service-div");
+    if (!serviceDiv) {
+      serviceDiv = document.createElement("div");
+      serviceDiv.id = "places-service-div";
+      serviceDiv.style.display = "none";
+      document.body.appendChild(serviceDiv);
+    }
+    const service = new google.maps.places.PlacesService(serviceDiv);
+
+    try {
+      const results = await new Promise((resolve, reject) => {
+        service.nearbySearch({
+          location: { lat: radiusCenter.lat, lng: radiusCenter.lng },
+          radius: radiusMiles * 1609.34, // convert miles to meters
+          type: "restaurant"
+        }, (results, status) => {
+          if (status === "OK" && results) resolve(results);
+          else if (status === "ZERO_RESULTS") resolve([]);
+          else reject(status);
+        });
+      });
+
+      // Filter out places already in our list (by name similarity)
+      const existingNames = new Set(places.map((p) => p.name.toLowerCase().trim()));
+      const filtered = results.filter((r) => {
+        const rName = (r.name || "").toLowerCase().trim();
+        // Skip if we already have this place (exact or very close match)
+        return !existingNames.has(rName) && ![...existingNames].some((n) => rName.includes(n) || n.includes(rName));
+      });
+
+      setNearbyResults(filtered);
+    } catch (err) {
+      console.warn("Nearby search failed:", err);
+      setNearbyResults([]);
+    }
+    setNearbyLoading(false);
+  }, [radiusCenter, radiusMiles, places]);
+
+  // Clear nearby results when radius is cleared
+  useEffect(() => {
+    if (!radiusMode) {
+      setNearbyResults([]);
+      setNearbyShown(false);
+    }
+  }, [radiusMode]);
+
+  // Quick-add a Google nearby result to your list
+  const addFromGoogle = async (googlePlace) => {
+    if (!user || !db) { alert("Sign in first to add places."); return; }
+    const newPlace = {
+      name: googlePlace.name || "",
+      location: "Boulder",
+      type: "Restaurant",
+      foodType: "",
+      kidFriendly: "",
+      vibe: "",
+      goodFor: "",
+      happyHour: false, dinner: false, lunch: false, brunch: false,
+      outdoor: false, notableOutdoor: false,
+      dateNight: false, kidsAndBeers: false,
+      notes: "",
+      address: googlePlace.vicinity || "",
+      googlePlaceId: googlePlace.place_id || "",
+      phone: "",
+      website: "",
+      lat: googlePlace.geometry ? googlePlace.geometry.location.lat() : null,
+      lng: googlePlace.geometry ? googlePlace.geometry.location.lng() : null,
+    };
+    // Open the edit form pre-filled so user can customize before saving
+    setEditingPlace(newPlace);
+    setExpandedId(null);
+    // Scroll to top to see the form
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   // === OPEN NOW LOGIC ===
   const checkOpenNow = useCallback(async () => {
     if (!window.google || !window.google.maps || !window.google.maps.places) return;
 
-    setOpenNowLoading(true);
+    // Auto-checking hours in background...
 
     // Create hidden div for PlacesService
     let serviceDiv = document.getElementById("places-service-div");
@@ -976,15 +1068,29 @@ function SpotFinder() {
 
     setOpenNowCache(newCache);
     setOpenNowChecked(true);
-    setOpenNowLoading(false);
+
   }, [places, openNowCache]);
 
-  // When Open Now is toggled on, check hours
+  // Auto-check hours when Google is ready and places are loaded
   useEffect(() => {
-    if (filterOpenNow && !openNowChecked) {
+    if (!openNowChecked && places.length > 0 && places.some((p) => p.googlePlaceId) && window.google && window.google.maps && window.google.maps.places) {
       checkOpenNow();
     }
-  }, [filterOpenNow, openNowChecked, checkOpenNow]);
+  }, [places, openNowChecked, checkOpenNow]);
+
+  // Retry checking once Google Maps loads (it loads async)
+  useEffect(() => {
+    if (openNowChecked || !window.GOOGLE_MAPS_READY) return;
+    const interval = setInterval(() => {
+      if (window.google && window.google.maps && window.google.maps.places) {
+        clearInterval(interval);
+        if (!openNowChecked && places.some((p) => p.googlePlaceId)) {
+          checkOpenNow();
+        }
+      }
+    }, 2000);
+    return () => clearInterval(interval);
+  }, [places.length, openNowChecked]);
 
   // === CRUD OPERATIONS ===
   const savePlace = async (formData) => {
@@ -1057,14 +1163,7 @@ function SpotFinder() {
       if (filterBrunch && !p.brunch) return false;
       if (filterDateNight && !p.dateNight) return false;
       if (filterKidsAndBeers && !p.kidsAndBeers) return false;
-      // Open Now filter
-      if (filterOpenNow && openNowChecked) {
-        if (!p.googlePlaceId) return false; // Can't check without placeId
-        const cached = openNowCache[p.googlePlaceId];
-        if (!cached) return false;
-        if (cached.isOpen === false) return false; // Definitely closed
-        // isOpen === null (unknown) — keep showing it
-      }
+
       // Radius filter: skip places without coordinates
       if (radiusMode && radiusCenter) {
         if (!p.lat || !p.lng) return false;
@@ -1086,15 +1185,15 @@ function SpotFinder() {
     }
 
     return result;
-  }, [places, search, filterLocations, filterTypes, filterFoodTypes, filterKidFriendly, filterHappyHour, filterOutdoor, filterDinner, filterLunch, filterBrunch, filterDateNight, filterKidsAndBeers, filterOpenNow, openNowChecked, openNowCache, radiusMode, radiusCenter, radiusMiles]);
+  }, [places, search, filterLocations, filterTypes, filterFoodTypes, filterKidFriendly, filterHappyHour, filterOutdoor, filterDinner, filterLunch, filterBrunch, filterDateNight, filterKidsAndBeers, radiusMode, radiusCenter, radiusMiles]);
 
-  const hasActiveFilters = search || filterLocations.length > 0 || filterTypes.length > 0 || filterFoodTypes.length > 0 || filterKidFriendly || filterHappyHour || filterOutdoor || filterDinner || filterLunch || filterBrunch || filterDateNight || filterKidsAndBeers || filterOpenNow || radiusMode;
+  const hasActiveFilters = search || filterLocations.length > 0 || filterTypes.length > 0 || filterFoodTypes.length > 0 || filterKidFriendly || filterHappyHour || filterOutdoor || filterDinner || filterLunch || filterBrunch || filterDateNight || filterKidsAndBeers || radiusMode;
 
   const clearFilters = () => {
     setSearch(""); setFilterLocations([]); setFilterTypes([]); setFilterFoodTypes([]);
     setFilterKidFriendly(false); setFilterHappyHour(false); setFilterOutdoor(false);
     setFilterDinner(false); setFilterLunch(false); setFilterBrunch(false);
-    setFilterDateNight(false); setFilterKidsAndBeers(false); setFilterOpenNow(false); setOpenNowChecked(false); clearRadius();
+    setFilterDateNight(false); setFilterKidsAndBeers(false); clearRadius();
   };
 
   return (
@@ -1155,17 +1254,15 @@ function SpotFinder() {
 
           {/* Row 3: Toggles + Add */}
           <div className="flex items-center gap-1.5 flex-wrap">
-            <Toggle label="👶 Kids" active={filterKidFriendly} onClick={() => setFilterKidFriendly(!filterKidFriendly)} color="green" />
+            <Toggle label="👶" active={filterKidFriendly} onClick={() => setFilterKidFriendly(!filterKidFriendly)} color="green" />
             <Toggle label="Happy Hour" active={filterHappyHour} onClick={() => setFilterHappyHour(!filterHappyHour)} color="amber" />
-            <Toggle label="🌳 Outdoor" active={filterOutdoor} onClick={() => setFilterOutdoor(!filterOutdoor)} color="teal" />
-            <Toggle label="Dinner" active={filterDinner} onClick={() => setFilterDinner(!filterDinner)} color="purple" />
-            <Toggle label="Lunch" active={filterLunch} onClick={() => setFilterLunch(!filterLunch)} color="purple" />
+            <Toggle label="🌳" active={filterOutdoor} onClick={() => setFilterOutdoor(!filterOutdoor)} color="teal" />
             <Toggle label="Brunch" active={filterBrunch} onClick={() => setFilterBrunch(!filterBrunch)} color="rose" />
-            <Toggle label="🍷 Date Night" active={filterDateNight} onClick={() => setFilterDateNight(!filterDateNight)} color="rose" />
+            <Toggle label="Lunch" active={filterLunch} onClick={() => setFilterLunch(!filterLunch)} color="purple" />
+            <Toggle label="Dinner" active={filterDinner} onClick={() => setFilterDinner(!filterDinner)} color="purple" />
+            <Toggle label="🍷" active={filterDateNight} onClick={() => setFilterDateNight(!filterDateNight)} color="rose" />
             <Toggle label="Kids & Beers" active={filterKidsAndBeers} onClick={() => setFilterKidsAndBeers(!filterKidsAndBeers)} color="blue" />
-            {window.GOOGLE_MAPS_READY && (
-              <Toggle label={openNowLoading ? "Checking..." : "Open Now"} active={filterOpenNow} onClick={() => { setFilterOpenNow(!filterOpenNow); if (filterOpenNow) { setOpenNowChecked(false); } }} color="blue" />
-            )}
+
             {hasActiveFilters && (
               <button onClick={clearFilters} className="text-xs font-bold text-purple-500 hover:text-purple-700 ml-1">
                 Clear
@@ -1282,8 +1379,53 @@ function SpotFinder() {
               onDelete={deletePlace}
               radiusMode={radiusMode}
               radiusCenter={radiusCenter}
+              openStatus={place.googlePlaceId && openNowCache[place.googlePlaceId] ? openNowCache[place.googlePlaceId].isOpen : null}
             />
           ))
+        )}
+
+        {/* Google Nearby Results */}
+        {radiusMode && radiusCenter && window.GOOGLE_MAPS_READY && (
+          <div className="mt-3">
+            {!nearbyShown ? (
+              <button
+                onClick={() => { setNearbyShown(true); searchNearby(); }}
+                className="w-full py-2.5 text-xs font-bold text-blue-500 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-xl transition-all"
+              >
+                Show more from Google Maps nearby
+              </button>
+            ) : nearbyLoading ? (
+              <p className="text-center text-xs text-blue-400 py-3">Searching nearby...</p>
+            ) : nearbyResults.length > 0 ? (
+              <div className="space-y-1">
+                <p className="text-xs font-bold text-blue-400 px-1 pt-1">Other nearby places from Google</p>
+                {nearbyResults.map((r) => (
+                  <div key={r.place_id} className="flex items-center gap-2 bg-blue-50/50 rounded-xl px-3 py-2 border border-blue-100">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-blue-800 truncate">{r.name}</p>
+                      <p className="text-xs text-blue-400 truncate">{r.vicinity}</p>
+                      {r.rating && <span className="text-xs text-amber-500">{"★".repeat(Math.round(r.rating))} {r.rating}</span>}
+                    </div>
+                    {r.geometry && r.geometry.location && (
+                      <span className="text-[10px] font-bold text-blue-400 bg-blue-100 px-2 py-0.5 rounded-full shrink-0">
+                        {haversine(radiusCenter.lat, radiusCenter.lng, r.geometry.location.lat(), r.geometry.location.lng()).toFixed(1)} mi
+                      </span>
+                    )}
+                    {user && (
+                      <button
+                        onClick={() => addFromGoogle(r)}
+                        className="text-xs font-bold text-blue-500 hover:text-blue-700 bg-white px-2.5 py-1 rounded-full border border-blue-200 hover:border-blue-400 shrink-0 transition-all"
+                      >
+                        + Add
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-center text-xs text-gray-400 py-2">No additional places found nearby</p>
+            )}
+          </div>
         )}
 
         {/* Spot count + Export */}
