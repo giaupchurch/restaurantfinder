@@ -890,20 +890,16 @@ function SpotFinder() {
       const updateData = {};
 
       // Date Night: tag if goodFor/vibe/notes contains "date"
-      if (!p.dateNight) {
+      if (p.dateNight === undefined) {
         const dateHint = ((p.goodFor || "") + " " + (p.vibe || "") + " " + (p.notes || "")).toLowerCase();
-        if (dateHint.includes("date")) {
-          updateData.dateNight = true;
-        }
+        updateData.dateNight = dateHint.includes("date");
       }
 
       // Kids & Beers: tag by exact name or partial match with location
-      if (!p.kidsAndBeers) {
+      if (p.kidsAndBeers === undefined) {
         const isKB = KIDS_AND_BEERS_NAMES.some((n) => n.toLowerCase() === (p.name || "").toLowerCase()) ||
           KIDS_AND_BEERS_PARTIAL.some((m) => (p.name || "").toLowerCase().includes(m.match.toLowerCase()) && (p.location || "").toLowerCase() === m.location.toLowerCase());
-        if (isKB) {
-          updateData.kidsAndBeers = true;
-        }
+        updateData.kidsAndBeers = isKB;
       }
 
       if (Object.keys(updateData).length > 0) {
@@ -1289,13 +1285,8 @@ function SpotFinder() {
             <Toggle label="👶" active={filterKidFriendly} onClick={() => setFilterKidFriendly(!filterKidFriendly)} color="green" />
             <Toggle label="🌳" active={filterOutdoor} onClick={() => setFilterOutdoor(!filterOutdoor)} color="teal" />
             <Toggle label="🍷" active={filterDateNight} onClick={() => setFilterDateNight(!filterDateNight)} color="rose" />
-            <Toggle label="Kids & Beers" active={filterKidsAndBeers} onClick={() => setFilterKidsAndBeers(!filterKidsAndBeers)} color="blue" />
+            <Toggle label="👶🍺" active={filterKidsAndBeers} onClick={() => setFilterKidsAndBeers(!filterKidsAndBeers)} color="blue" />
             <Toggle label="Happy Hour" active={filterHappyHour} onClick={() => setFilterHappyHour(!filterHappyHour)} color="amber" />
-            {hasActiveFilters && (
-              <button onClick={clearFilters} className="text-xs font-bold text-purple-500 hover:text-purple-700 ml-1">
-                Clear
-              </button>
-            )}
           </div>
 
           {/* Row 4: Radius Filter */}
@@ -1312,14 +1303,19 @@ function SpotFinder() {
               >
                 {geoLoading ? "Finding you..." : "Near Me"}
               </button>
-              <div className="flex-1 min-w-[140px]">
+              <div className="flex-1 min-w-[140px] relative">
                 <input
                   ref={addressInputRef}
                   placeholder="Search near an address..."
                   className={`w-full border-2 rounded-xl px-3 py-1.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-transparent ${
                     radiusMode === "address" ? "border-blue-300 bg-blue-50" : "border-purple-100 bg-white"
-                  }`}
+                  } ${hasActiveFilters ? "pr-12" : ""}`}
                 />
+                {hasActiveFilters && (
+                  <button onClick={clearFilters} className="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-bold text-purple-500 hover:text-purple-700">
+                    Clear
+                  </button>
+                )}
               </div>
               {radiusMode && (
                 <>
