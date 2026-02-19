@@ -283,6 +283,19 @@ function EditForm({ place, onSave, onCancel, locations, types, foodTypes, existi
       fields: ["name", "formatted_address", "geometry", "place_id", "formatted_phone_number", "website", "opening_hours", "photos", "types", "address_components"]
     });
 
+    // Press Enter to select the first autocomplete suggestion
+    nameInputRef.current.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        const downEvent = new KeyboardEvent("keydown", { key: "ArrowDown", keyCode: 40, bubbles: true });
+        nameInputRef.current.dispatchEvent(downEvent);
+        setTimeout(() => {
+          const enterEvent = new KeyboardEvent("keydown", { key: "Enter", keyCode: 13, bubbles: true });
+          nameInputRef.current.dispatchEvent(enterEvent);
+        }, 50);
+      }
+    });
+
     ac.addListener("place_changed", () => {
       const p = ac.getPlace();
       if (!p || !p.name) return;
@@ -369,6 +382,7 @@ function EditForm({ place, onSave, onCancel, locations, types, foodTypes, existi
         lunch: f.lunch || autoLunch,
         dinner: f.dinner || autoDinner,
         takeout: f.takeout || autoTakeout,
+        food: f.food || (autoType === "Restaurant" || autoType === "Food Court" ? "full" : ""),
       }));
     });
     autocompleteRef.current = ac;
@@ -476,14 +490,39 @@ function EditForm({ place, onSave, onCancel, locations, types, foodTypes, existi
         </div>
       </div>
 
+      {/* Food slider (No / Snacks / Full Menu) */}
+      <div>
+        <label className="text-xs font-medium text-gray-500 mb-1 block">🍽️ Food</label>
+        <div className="flex rounded-xl overflow-hidden border-2 border-purple-100">
+          {[
+            { value: "no", label: "No" },
+            { value: "snacks", label: "Snacks" },
+            { value: "full", label: "Full Menu" },
+          ].map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => set("food", opt.value)}
+              className={`flex-1 py-2 text-xs font-bold transition-all ${
+                form.food === opt.value
+                  ? opt.value === "full" ? "bg-orange-500 text-white"
+                    : opt.value === "snacks" ? "bg-orange-400 text-white"
+                    : "bg-gray-300 text-white"
+                  : "bg-white text-gray-500 hover:bg-gray-50"
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Row 4: Toggle buttons */}
       <div className="flex flex-wrap gap-1.5">
         {[
           { key: "brunch", label: "Brunch", color: "rose" },
           { key: "lunch", label: "Lunch", color: "purple" },
           { key: "dinner", label: "Dinner", color: "purple" },
-          { key: "happyHour", label: "Happy Hour", color: "amber" },
-          { key: "kidsAndBeers", label: "Kids & Beers", color: "blue" },
           { key: "dateNight", label: "Date Night", color: "rose" },
           { key: "takeout", label: "🥡 Takeout", color: "orange" },
         ].map((t) => (
@@ -548,12 +587,12 @@ function PlaceRow({ place, isExpanded, onToggle, user, onEdit, onDelete, radiusM
   if (place.kidFriendly === "very") badges.push({ label: "🛝 Super Kid-Friendly", color: "bg-emerald-200 text-emerald-800" });
   else if (place.kidFriendly === "yes") badges.push({ label: "Kid Friendly", color: "bg-emerald-100 text-emerald-700" });
   if (place.kidFriendly === "maybe") badges.push({ label: "Maybe Kids", color: "bg-yellow-100 text-yellow-700" });
-  if (place.happyHour) badges.push({ label: "Happy Hour", color: "bg-amber-100 text-amber-700" });
   if (place.outdoor && place.notableOutdoor) badges.push({ label: "☀️ Excellent Patio", color: "bg-teal-200 text-teal-800" });
   else if (place.outdoor) badges.push({ label: "Patio", color: "bg-teal-100 text-teal-700" });
   if (place.dateNight) badges.push({ label: "Date Night", color: "bg-rose-100 text-rose-700" });
-  if (place.kidsAndBeers) badges.push({ label: "Kids & Beers", color: "bg-blue-100 text-blue-700" });
   if (place.takeout) badges.push({ label: "🥡 Takeout", color: "bg-orange-100 text-orange-700" });
+  if (place.food === "snacks") badges.push({ label: "Snacks Only", color: "bg-yellow-100 text-yellow-700" });
+  else if (place.food === "no") badges.push({ label: "No Food", color: "bg-gray-100 text-gray-600" });
 
   const meals = [];
   if (place.dinner) meals.push("Dinner");
@@ -732,13 +771,12 @@ function SpotFinder() {
   const [filterTypes, setFilterTypes] = useState([]);
   const [filterFoodTypes, setFilterFoodTypes] = useState([]);
   const [filterKidFriendly, setFilterKidFriendly] = useState(false);
-  const [filterHappyHour, setFilterHappyHour] = useState(false);
+  const [filterBeer, setFilterBeer] = useState(false);
   const [filterOutdoor, setFilterOutdoor] = useState(false);
   const [filterDinner, setFilterDinner] = useState(false);
   const [filterLunch, setFilterLunch] = useState(false);
   const [filterBrunch, setFilterBrunch] = useState(false);
   const [filterDateNight, setFilterDateNight] = useState(false);
-  const [filterKidsAndBeers, setFilterKidsAndBeers] = useState(false);
   const [filterTakeout, setFilterTakeout] = useState(false);
   const [openNowCache, setOpenNowCache] = useState({}); // { placeId: { isOpen: bool, checkedAt: timestamp } }
   const [openNowChecked, setOpenNowChecked] = useState(false); // true once we've checked hours
@@ -1311,10 +1349,11 @@ function SpotFinder() {
 
   // === EXPORT TO SPREADSHEET ===
   const handleExport = () => {
-    const headers = ["Name", "Location", "Type", "Food Type", "Kid Friendly", "Vibe", "Good For", "Happy Hour", "Dinner", "Lunch", "Breakfast/Brunch", "Has Outdoor Space", "Notable Outdoor Space", "Date Night", "Kids & Beers", "Takeout", "Notes", "Address", "Phone", "Website"];
+    const headers = ["Name", "Location", "Type", "Food Type", "Kid Friendly", "Food", "Vibe", "Good For", "Happy Hour", "Dinner", "Lunch", "Breakfast/Brunch", "Has Outdoor Space", "Notable Outdoor Space", "Date Night", "Kids & Beers", "Takeout", "Notes", "Address", "Phone", "Website"];
     const rows = places.map((p) => [
       p.name || "", p.location || "", p.type || "", p.foodType || "",
       p.kidFriendly === "very" ? "Very" : p.kidFriendly === "yes" ? "Y" : p.kidFriendly === "maybe" ? "Maybe" : p.kidFriendly === "no" ? "N" : "",
+      p.food === "full" ? "Full Menu" : p.food === "snacks" ? "Snacks" : p.food === "no" ? "No" : "",
       p.vibe || "", p.goodFor || "",
       p.happyHour ? "Y" : "N", p.dinner ? "Y" : "N", p.lunch ? "Y" : "N", p.brunch ? "Y" : "N",
       p.outdoor ? "Y" : "N", p.notableOutdoor ? "Y" : "N",
@@ -1344,13 +1383,12 @@ function SpotFinder() {
       if (filterTypes.length > 0 && !filterTypes.includes(p.type)) return false;
       if (filterFoodTypes.length > 0 && !filterFoodTypes.includes(p.foodType)) return false;
       if (filterKidFriendly && p.kidFriendly !== "yes" && p.kidFriendly !== "maybe" && p.kidFriendly !== "very") return false;
-      if (filterHappyHour && !p.happyHour) return false;
+      if (filterBeer && p.type !== "Brewery" && p.type !== "Bar") return false;
       if (filterOutdoor && !p.outdoor) return false;
       if (filterDinner && !p.dinner) return false;
       if (filterLunch && !p.lunch) return false;
       if (filterBrunch && !p.brunch) return false;
       if (filterDateNight && !p.dateNight) return false;
-      if (filterKidsAndBeers && !p.kidsAndBeers) return false;
       if (filterTakeout && !p.takeout) return false;
 
       // Radius filter: skip places without coordinates
@@ -1374,15 +1412,15 @@ function SpotFinder() {
     }
 
     return result;
-  }, [places, search, filterLocations, filterTypes, filterFoodTypes, filterKidFriendly, filterHappyHour, filterOutdoor, filterDinner, filterLunch, filterBrunch, filterDateNight, filterKidsAndBeers, filterTakeout, radiusMode, radiusCenter, radiusMiles]);
+  }, [places, search, filterLocations, filterTypes, filterFoodTypes, filterKidFriendly, filterBeer, filterOutdoor, filterDinner, filterLunch, filterBrunch, filterDateNight, filterTakeout, radiusMode, radiusCenter, radiusMiles]);
 
-  const hasActiveFilters = search || filterLocations.length > 0 || filterTypes.length > 0 || filterFoodTypes.length > 0 || filterKidFriendly || filterHappyHour || filterOutdoor || filterDinner || filterLunch || filterBrunch || filterDateNight || filterKidsAndBeers || filterTakeout || radiusMode;
+  const hasActiveFilters = search || filterLocations.length > 0 || filterTypes.length > 0 || filterFoodTypes.length > 0 || filterKidFriendly || filterBeer || filterOutdoor || filterDinner || filterLunch || filterBrunch || filterDateNight || filterTakeout || radiusMode;
 
   const clearFilters = () => {
     setSearch(""); setFilterLocations([]); setFilterTypes([]); setFilterFoodTypes([]);
-    setFilterKidFriendly(false); setFilterHappyHour(false); setFilterOutdoor(false);
+    setFilterKidFriendly(false); setFilterBeer(false); setFilterOutdoor(false);
     setFilterDinner(false); setFilterLunch(false); setFilterBrunch(false);
-    setFilterDateNight(false); setFilterKidsAndBeers(false); setFilterTakeout(false); clearRadius();
+    setFilterDateNight(false); setFilterTakeout(false); clearRadius();
   };
 
   return (
@@ -1411,7 +1449,7 @@ function SpotFinder() {
               )}
               {user && (
                 <button
-                  onClick={() => { setEditingPlace({ name: "", location: "", type: "", foodType: "", kidFriendly: "no", vibe: "", goodFor: "", happyHour: false, dinner: false, lunch: false, brunch: false, outdoor: false, notableOutdoor: false, dateNight: false, kidsAndBeers: false, notes: "", address: "", googlePlaceId: "", phone: "", website: "", lat: null, lng: null }); setExpandedId(null); }}
+                  onClick={() => { setEditingPlace({ name: "", location: "", type: "", foodType: "", kidFriendly: "no", food: "", vibe: "", goodFor: "", happyHour: false, dinner: false, lunch: false, brunch: false, outdoor: false, notableOutdoor: false, dateNight: false, kidsAndBeers: false, takeout: false, notes: "", address: "", googlePlaceId: "", phone: "", website: "", lat: null, lng: null }); setExpandedId(null); }}
                   className="bg-gradient-to-r from-purple-600 to-pink-500 text-white text-xs font-bold px-3.5 py-1.5 rounded-full shadow-md hover:shadow-lg transition-all shrink-0"
                 >
                   + Add
@@ -1426,10 +1464,12 @@ function SpotFinder() {
           {/* Row 1: Search */}
           <div className="mb-2">
             <input
-              type="text"
+              type="search"
+              enterKeyHint="search"
               placeholder="Search..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") e.target.blur(); }}
               className="w-full border-2 border-purple-100 rounded-xl px-3 py-1.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent bg-white"
             />
           </div>
@@ -1451,10 +1491,9 @@ function SpotFinder() {
           {/* Row 4: Special filters */}
           <div className="flex items-center gap-1.5 flex-wrap">
             <Toggle label="👶" active={filterKidFriendly} onClick={() => setFilterKidFriendly(!filterKidFriendly)} color="green" />
+            <Toggle label="🍺" active={filterBeer} onClick={() => setFilterBeer(!filterBeer)} color="amber" />
             <Toggle label="🌳" active={filterOutdoor} onClick={() => setFilterOutdoor(!filterOutdoor)} color="teal" />
             <Toggle label="🍷" active={filterDateNight} onClick={() => setFilterDateNight(!filterDateNight)} color="rose" />
-            <Toggle label="👶🍺" active={filterKidsAndBeers} onClick={() => setFilterKidsAndBeers(!filterKidsAndBeers)} color="blue" />
-            <Toggle label="Happy Hour" active={filterHappyHour} onClick={() => setFilterHappyHour(!filterHappyHour)} color="amber" />
             <Toggle label="🥡" active={filterTakeout} onClick={() => setFilterTakeout(!filterTakeout)} color="orange" />
           </div>
 
