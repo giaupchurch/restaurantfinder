@@ -1068,27 +1068,39 @@ function SpotFinder() {
         if (details.business_status === "CLOSED_TEMPORARILY" || details.business_status === "CLOSED_PERMANENTLY") {
           isOpen = false;
           console.log("[Open Now]", p.name, "→ permanently/temporarily closed (business_status:", details.business_status + ")");
-        } else if (details.opening_hours && typeof details.opening_hours.isOpen === "function") {
-          isOpen = details.opening_hours.isOpen();
-          console.log("[Open Now]", p.name, "→", isOpen ? "OPEN" : "CLOSED", "(via isOpen())");
         } else if (details.opening_hours && details.opening_hours.periods) {
-          // Fallback: manually check periods if isOpen() not available
+          // Primary: manually check periods (more reliable than isOpen())
           const now = new Date();
           const day = now.getDay(); // 0=Sun
           const timeNow = now.getHours() * 100 + now.getMinutes();
-          const todayPeriods = details.opening_hours.periods.filter((period) => period.open && period.open.day === day);
-          if (todayPeriods.length === 0) {
-            isOpen = false;
+          // Special case: a single period with no close = open 24 hours
+          if (details.opening_hours.periods.length === 1 && !details.opening_hours.periods[0].close) {
+            isOpen = true;
+            console.log("[Open Now]", p.name, "→ OPEN (24 hours)");
           } else {
-            isOpen = todayPeriods.some((period) => {
-              const openTime = period.open.hours * 100 + period.open.minutes;
-              const closeTime = period.close ? period.close.hours * 100 + period.close.minutes : 2400;
-              // Handle overnight (close time on next day)
-              if (period.close && period.close.day !== day) return timeNow >= openTime;
-              return timeNow >= openTime && timeNow < closeTime;
-            });
+            // Check if any period covers the current day+time
+            // We need to check today's periods AND overnight periods from yesterday
+            const todayPeriods = details.opening_hours.periods.filter((period) => period.open && period.open.day === day);
+            const yesterdayPeriods = details.opening_hours.periods.filter((period) => period.open && period.open.day === (day + 6) % 7 && period.close && period.close.day === day);
+            const relevantPeriods = [...todayPeriods, ...yesterdayPeriods];
+            if (relevantPeriods.length === 0) {
+              isOpen = false;
+              console.log("[Open Now]", p.name, "→ CLOSED (no hours today, day:", day, "time:", timeNow + ")");
+            } else {
+              isOpen = relevantPeriods.some((period) => {
+                const openTime = period.open.hours * 100 + period.open.minutes;
+                const closeTime = period.close ? period.close.hours * 100 + period.close.minutes : 2400;
+                // If this is an overnight period from yesterday, we're in the close-side
+                if (period.open.day !== day) return timeNow < closeTime;
+                // If close is on a different day (overnight), we're open from openTime onward
+                if (period.close && period.close.day !== day) return timeNow >= openTime;
+                // Normal same-day period
+                return timeNow >= openTime && timeNow < closeTime;
+              });
+              console.log("[Open Now]", p.name, "→", isOpen ? "OPEN" : "CLOSED", "(via periods, day:", day, "time:", timeNow,
+                "periods:", relevantPeriods.map(pr => (pr.open.hours*100+pr.open.minutes) + "-" + (pr.close ? pr.close.hours*100+pr.close.minutes : "24hr")).join(", ") + ")");
+            }
           }
-          console.log("[Open Now]", p.name, "→", isOpen ? "OPEN" : "CLOSED", "(via periods fallback, day:", day, "time:", timeNow + ")");
         } else {
           console.log("[Open Now]", p.name, "→ UNKNOWN (no opening_hours data)", "business_status:", details.business_status);
         }
