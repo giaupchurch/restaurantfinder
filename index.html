@@ -239,24 +239,6 @@ const TYPE_BG = {
   "Takeout": "bg-sky-100 text-sky-700",
 };
 
-function Toggle({ label, active, onClick, color = "blue" }) {
-  const colors = {
-    blue: active ? "bg-violet-600 text-white shadow-lg shadow-violet-200" : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-300 shadow-sm",
-  "Food Hall": "from-emerald-500 to-teal-600",
-  "Takeout": "from-sky-500 to-blue-600",
-};
-
-const TYPE_BG = {
-  "Restaurant": "bg-violet-100 text-violet-700",
-  "Brewery": "bg-amber-100 text-amber-700",
-  "Brewery & Restaurant": "bg-orange-100 text-orange-700",
-  "Bar": "bg-rose-100 text-rose-700",
-  "Bar & Restaurant": "bg-fuchsia-100 text-fuchsia-700",
-  "Food Hall": "bg-emerald-100 text-emerald-700",
-  "Takeout": "bg-sky-100 text-sky-700",
-};
-
-function Toggle({ label, active, onClick, color = "blue" }) {
 function haversine(lat1, lng1, lat2, lng2) {
   const R = 3959; // Earth radius in miles
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
@@ -277,6 +259,16 @@ function Toggle({ label, active, onClick, color = "blue" }) {
     teal: active ? "bg-teal-500 text-white shadow-lg shadow-teal-200" : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-300 shadow-sm",
   };
   return (
+    <button
+      onClick={onClick}
+      className={`text-xs font-semibold px-3.5 py-1.5 rounded-full transition-all ${colors[color]}`}
+    >
+      {label}
+    </button>
+  );
+}
+
+function EditForm({ place, onSave, onCancel, locations, types, foodTypes, existingPlaces }) {
   const [form, setForm] = useState({ ...place });
   const set = (field, val) => setForm((f) => ({ ...f, [field]: val }));
   const nameInputRef = useRef(null);
@@ -312,42 +304,13 @@ function Toggle({ label, active, onClick, color = "blue" }) {
         lat: p.geometry && p.geometry.location ? p.geometry.location.lat() : null,
         lng: p.geometry && p.geometry.location ? p.geometry.location.lng() : null,
       }));
-    <div className="relative bg-purple-50 rounded-xl p-4 space-y-3 border-2 border-purple-200">
-      <button onClick={onCancel} className="absolute top-2 right-2 w-7 h-7 flex items-center justify-center rounded-full bg-purple-200 hover:bg-purple-300 text-purple-700 font-bold text-sm leading-none">&times;</button>
-      <div className="flex justify-between items-center mb-1 pr-8">
-        <h3 className="text-sm font-black text-purple-700">{place.id ? "Edit Place" : "Add New Place"}</h3>
-      </div>
-
-      {/* Row 1: Name with Google Autocomplete */}
-      <div>
-        <input ref={nameInputRef} value={form.name || ""} onChange={(e) => set("name", e.target.value)} placeholder={window.GOOGLE_MAPS_READY ? "Start typing a place name..." : "Name *"} className="w-full border-2 border-purple-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300" />
-        {form.address && (
-          <p className="text-xs text-gray-400 mt-1 px-1">{form.address}</p>
-        )}
-      </div>
-
-      {/* Row 2: Location + Type */}
-}
-
-function PlaceRow({ place, isExpanded, onToggle, user, onEdit, onDelete }) {
-  const gradient = TYPE_COLORS[place.type] || "from-gray-400 to-gray-500";
-  const typeBg = TYPE_BG[place.type] || "bg-gray-100 text-gray-700";
-
-  const badges = [];
-  if (place.kidFriendly === "very") badges.push({ label: "🛝 Super Kid-Friendly", color: "bg-emerald-200 text-emerald-800" });
-  else if (place.kidFriendly === "yes") badges.push({ label: "Kid Friendly", color: "bg-emerald-100 text-emerald-700" });
-  if (place.kidFriendly === "maybe") badges.push({ label: "Maybe Kids", color: "bg-yellow-100 text-yellow-700" });
-  if (place.happyHour) badges.push({ label: "Happy Hour", color: "bg-amber-100 text-amber-700" });
-  if (place.outdoor && place.notableOutdoor) badges.push({ label: "☀️ Excellent Patio", color: "bg-teal-200 text-teal-800" });
-  else if (place.outdoor) badges.push({ label: "Patio", color: "bg-teal-100 text-teal-700" });
-
-  const meals = [];
-  if (place.dinner) meals.push("Dinner");
-  if (place.lunch) meals.push("Lunch");
-  if (place.brunch) meals.push("Brunch");
+    });
+    autocompleteRef.current = ac;
+  }, []);
 
   return (
-    <div className="overflow-hidden">
+    <div className="relative bg-purple-50 rounded-xl p-4 space-y-3 border-2 border-purple-200">
+      <button onClick={onCancel} className="absolute top-2 right-2 w-7 h-7 flex items-center justify-center rounded-full bg-purple-200 hover:bg-purple-300 text-purple-700 font-bold text-sm leading-none">&times;</button>
       <div className="flex justify-between items-center mb-1 pr-8">
         <h3 className="text-sm font-black text-purple-700">{place.id ? "Edit Place" : "Add New Place"}</h3>
       </div>
