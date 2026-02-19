@@ -76,13 +76,13 @@ if (FIREBASE_READY) {
 const PLACES = [
   { id: 1, name: "24 Carrot", location: "Erie", type: "Restaurant", foodType: "New American", kidFriendly: "maybe", vibe: "Upscale farm-to-table bistro", goodFor: "Lunch, brunch, date night", happyHour: false, dinner: true, lunch: true, brunch: true, outdoor: true, notableOutdoor: true, notes: "" },
   { id: 2, name: "4 Noses Brewing", location: "Broomfield", type: "Brewery", foodType: "Brewery", kidFriendly: "maybe", vibe: "Family-owned brewery, casual taproom", goodFor: "Beer lovers, casual hangout", happyHour: true, dinner: false, lunch: false, brunch: false, outdoor: false, notableOutdoor: false, notes: "" },
-  { id: 3, name: "Acreage", location: "Erie", type: "Brewery & Restaurant", foodType: "American", kidFriendly: "yes", vibe: "Modern cider house with scenic views", goodFor: "Family outings, groups, scenic dining", happyHour: false, dinner: true, lunch: true, brunch: false, outdoor: true, notableOutdoor: true, notes: "" },
+  { id: 3, name: "Acreage", location: "Erie", type: "Brewery", foodType: "American", kidFriendly: "yes", vibe: "Modern cider house with scenic views", goodFor: "Family outings, groups, scenic dining", happyHour: false, dinner: true, lunch: true, brunch: false, outdoor: true, notableOutdoor: true, notes: "" },
   { id: 4, name: "Aloy Thai", location: "Boulder", type: "Restaurant", foodType: "Thai", kidFriendly: "maybe", vibe: "Casual Thai restaurant", goodFor: "Lunch, affordable meals", happyHour: false, dinner: true, lunch: true, brunch: false, outdoor: false, notableOutdoor: false, notes: "" },
   { id: 5, name: "Amu", location: "Boulder", type: "Restaurant", foodType: "Asian", kidFriendly: "no", vibe: "Intimate Japanese izakaya, sake-focused", goodFor: "Date night, intimate dining", happyHour: false, dinner: true, lunch: true, brunch: false, outdoor: false, notableOutdoor: false, notes: "" },
   { id: 6, name: "Asher Brewing", location: "Gunbarrel", type: "Brewery", foodType: "Brewery", kidFriendly: "maybe", vibe: "Organic brewery, casual taproom", goodFor: "Beer lovers, casual games", happyHour: false, dinner: false, lunch: false, brunch: false, outdoor: true, notableOutdoor: false, notes: "" },
   { id: 7, name: "Audrey Jane's Pizza Garage", location: "Boulder", type: "Restaurant", foodType: "Pizza", kidFriendly: "yes", vibe: "Neighborhood pizza shop, casual", goodFor: "Pizza, casual family dining", happyHour: false, dinner: true, lunch: true, brunch: false, outdoor: false, notableOutdoor: false, notes: "" },
-  { id: 8, name: "Avanti", location: "Boulder", type: "Food Hall", foodType: "Multi-vendor", kidFriendly: "yes", vibe: "Modern food hall with multiple concepts", goodFor: "Quick lunch, variety seekers, groups", happyHour: true, dinner: true, lunch: true, brunch: false, outdoor: true, notableOutdoor: false, notes: "" },
-  { id: 9, name: "Avery", location: "Gunbarrel", type: "Brewery & Restaurant", foodType: "American", kidFriendly: "yes", vibe: "Dog-friendly brewery and restaurant", goodFor: "Beer lovers, families, casual", happyHour: true, dinner: true, lunch: true, brunch: false, outdoor: true, notableOutdoor: true, notes: "" },
+  { id: 8, name: "Avanti", location: "Boulder", type: "Food Court", foodType: "Multi-vendor", kidFriendly: "yes", vibe: "Modern food hall with multiple concepts", goodFor: "Quick lunch, variety seekers, groups", happyHour: true, dinner: true, lunch: true, brunch: false, outdoor: true, notableOutdoor: false, notes: "" },
+  { id: 9, name: "Avery", location: "Gunbarrel", type: "Brewery", foodType: "American", kidFriendly: "yes", vibe: "Dog-friendly brewery and restaurant", goodFor: "Beer lovers, families, casual", happyHour: true, dinner: true, lunch: true, brunch: false, outdoor: true, notableOutdoor: true, notes: "" },
   { id: 10, name: "BJ's", location: "Boulder", type: "Restaurant", foodType: "Pizza", kidFriendly: "yes", vibe: "Family-friendly brewhouse, casual", goodFor: "Pizza, families, casual dining", happyHour: true, dinner: true, lunch: true, brunch: false, outdoor: false, notableOutdoor: false, notes: "" },
   { id: 11, name: "Backcountry Pizza", location: "Boulder", type: "Restaurant", foodType: "American", kidFriendly: "yes", vibe: "Casual & beer focused, Pub", goodFor: "Pizza, casual games, families", happyHour: true, dinner: true, lunch: false, brunch: false, outdoor: true, notableOutdoor: false, notes: "*not open Mon or Tues*, happy hour until 6 on sunday (?) with half prized appetizers!!" },
   { id: 12, name: "BarTaco", location: "Boulder", type: "Restaurant", foodType: "Mexican", kidFriendly: "maybe", vibe: "upscale trendy mexican", goodFor: "Tacos, margaritas, happy hour", happyHour: true, dinner: true, lunch: true, brunch: false, outdoor: true, notableOutdoor: false, notes: "quite popular, tasty, not that cheap" },
@@ -92,8 +92,8 @@ const PLACES = [
   { id: 16, name: "Birdhouse", location: "Erie", type: "Restaurant", foodType: "Asian", kidFriendly: "maybe", vibe: "Fusion", goodFor: "Ramen, quick lunch, Asian fusion", happyHour: false, dinner: true, lunch: true, brunch: false, outdoor: false, notableOutdoor: false, notes: "" },
   { id: 17, name: "Bitter Bar", location: "Boulder", type: "Bar", foodType: "Bar", kidFriendly: "no", vibe: "Cocktail bar", goodFor: "Cocktails, date night", happyHour: false, dinner: false, lunch: false, brunch: false, outdoor: false, notableOutdoor: false, notes: "" },
   { id: 18, name: "Blackbelly", location: "Boulder", type: "Restaurant", foodType: "American", kidFriendly: "no", vibe: "Butcher shop", goodFor: "Special occasions, fine dining", happyHour: false, dinner: false, lunch: true, brunch: false, outdoor: false, notableOutdoor: false, notes: "too expensive for what it is for dinner" },
-  { id: 19, name: "Bohemian Biergarten", location: "Boulder", type: "Brewery & Restaurant", foodType: "German", kidFriendly: "maybe", vibe: "Authentic German beer garden, historic building", goodFor: "Beer lovers, families, groups", happyHour: false, dinner: true, lunch: true, brunch: false, outdoor: true, notableOutdoor: true, notes: "" },
-  { id: 20, name: "Boss Lady Pizza", location: "Boulder", type: "Takeout", foodType: "Pizza", kidFriendly: "maybe", vibe: "Casual pizza takeout", goodFor: "Quick pizza", happyHour: false, dinner: true, lunch: true, brunch: false, outdoor: false, notableOutdoor: false, notes: "" },
+  { id: 19, name: "Bohemian Biergarten", location: "Boulder", type: "Brewery", foodType: "German", kidFriendly: "maybe", vibe: "Authentic German beer garden, historic building", goodFor: "Beer lovers, families, groups", happyHour: false, dinner: true, lunch: true, brunch: false, outdoor: true, notableOutdoor: true, notes: "" },
+  { id: 20, name: "Boss Lady Pizza", location: "Boulder", type: "Restaurant", foodType: "Pizza", kidFriendly: "maybe", vibe: "Casual pizza takeout", goodFor: "Quick pizza", happyHour: false, dinner: true, lunch: true, brunch: false, outdoor: false, notableOutdoor: false, takeout: true, notes: "" },
   { id: 21, name: "Boulder Cork", location: "Boulder", type: "Restaurant", foodType: "American", kidFriendly: "no", vibe: "Steakhouse", goodFor: "Special occasions, steak dinners", happyHour: false, dinner: true, lunch: false, brunch: false, outdoor: true, notableOutdoor: false, notes: "" },
   { id: 22, name: "Boulder Social", location: "Boulder", type: "Restaurant", foodType: "American", kidFriendly: "yes", vibe: "Brewery, restaurant, and social hangout", goodFor: "Families, beer lovers, brunch", happyHour: false, dinner: true, lunch: true, brunch: true, outdoor: true, notableOutdoor: true, notes: "" },
   { id: 23, name: "Bramble and Hare", location: "Boulder", type: "Restaurant", foodType: "New American", kidFriendly: "no", vibe: "Upscale farm-to-table farmhouse", goodFor: "Special occasions, farm-to-table", happyHour: false, dinner: true, lunch: false, brunch: false, outdoor: false, notableOutdoor: false, notes: "" },
@@ -105,11 +105,11 @@ const PLACES = [
   { id: 31, name: "Chatauqua Dining Hall", location: "The Hill", type: "Restaurant", foodType: "New American", kidFriendly: "yes", vibe: "Historic Victorian with wrap-around porch", goodFor: "Families, scenic views, brunch", happyHour: true, dinner: true, lunch: true, brunch: true, outdoor: true, notableOutdoor: true, notes: "" },
   { id: 32, name: "Colorado Tap House", location: "Arvada", type: "Brewery", foodType: "Brewery", kidFriendly: "maybe", vibe: "Family-friendly brewery with outdoor games", goodFor: "Families, beer lovers, outdoor activities", happyHour: false, dinner: false, lunch: false, brunch: false, outdoor: true, notableOutdoor: true, notes: "" },
   { id: 33, name: "Community", location: "Lafayette", type: "Restaurant", foodType: "New American", kidFriendly: "yes", vibe: "Small plates", goodFor: "Families, handmade pasta, casual dinner", happyHour: true, dinner: true, lunch: false, brunch: false, outdoor: true, notableOutdoor: false, notes: "Super cute, delicious food, not cheap but not expensive, often a long wait" },
-  { id: 34, name: "Corner Bar at Boulderado", location: "Downtown", type: "Bar & Restaurant", foodType: "American", kidFriendly: "yes", vibe: "Casual burger bar in historic hotel", goodFor: "happy hour, date night", happyHour: true, dinner: true, lunch: true, brunch: false, outdoor: false, notableOutdoor: false, notes: "" },
+  { id: 34, name: "Corner Bar at Boulderado", location: "Downtown", type: "Restaurant", foodType: "American", kidFriendly: "yes", vibe: "Casual burger bar in historic hotel", goodFor: "happy hour, date night", happyHour: true, dinner: true, lunch: true, brunch: false, outdoor: false, notableOutdoor: false, notes: "" },
   { id: 35, name: "Corrida", location: "Downtown", type: "Restaurant", foodType: "Tapas", kidFriendly: "no", vibe: "Spanish", goodFor: "Special occasions, steak, rooftop views", happyHour: true, dinner: true, lunch: false, brunch: true, outdoor: true, notableOutdoor: true, notes: "" },
-  { id: 36, name: "Cultivate Kitchen", location: "Louisville", type: "Takeout", foodType: "Brunch/Cafe", kidFriendly: "maybe", vibe: "Healthy meal prep", goodFor: "Meal prep, healthy eating", happyHour: false, dinner: true, lunch: true, brunch: false, outdoor: false, notableOutdoor: false, notes: "" },
+  { id: 36, name: "Cultivate Kitchen", location: "Louisville", type: "Restaurant", foodType: "Brunch/Cafe", kidFriendly: "maybe", vibe: "Healthy meal prep", goodFor: "Meal prep, healthy eating", happyHour: false, dinner: true, lunch: true, brunch: false, outdoor: false, notableOutdoor: false, takeout: true, notes: "" },
   { id: 37, name: "Dagabi Tapas", location: "North Boulder", type: "Restaurant", foodType: "Tapas", kidFriendly: "maybe", vibe: "Hidden Spanish tapas bar", goodFor: "Spanish tapas, wood-fired pizza", happyHour: true, dinner: true, lunch: true, brunch: false, outdoor: true, notableOutdoor: false, notes: "" },
-  { id: 38, name: "Dark Horse", location: "Central Boulder", type: "Bar & Restaurant", foodType: "American", kidFriendly: "maybe", vibe: "Iconic kitschy bar with antiques and burgers", goodFor: "Burgers, casual hangout, karaoke", happyHour: false, dinner: true, lunch: true, brunch: false, outdoor: false, notableOutdoor: false, notes: "" },
+  { id: 38, name: "Dark Horse", location: "Central Boulder", type: "Restaurant", foodType: "American", kidFriendly: "maybe", vibe: "Iconic kitschy bar with antiques and burgers", goodFor: "Burgers, casual hangout, karaoke", happyHour: false, dinner: true, lunch: true, brunch: false, outdoor: false, notableOutdoor: false, notes: "" },
   { id: 39, name: "Dragonfly", location: "Downtown", type: "Restaurant", foodType: "Asian", kidFriendly: "maybe", vibe: "Fusion", goodFor: "Ramen, Asian fusion", happyHour: false, dinner: true, lunch: true, brunch: false, outdoor: false, notableOutdoor: false, notes: "" },
   { id: 40, name: "Dushanbe Tea House", location: "Downtown", type: "Restaurant", foodType: "Brunch/Cafe", kidFriendly: "yes", vibe: "Tea house, global cuisine", goodFor: "", happyHour: false, dinner: true, lunch: true, brunch: true, outdoor: true, notableOutdoor: false, notes: "" },
   { id: 41, name: "Efrains", location: "Central Boulder", type: "Restaurant", foodType: "Mexican", kidFriendly: "yes", vibe: "Classic mexican restaurant boulder style", goodFor: "", happyHour: false, dinner: true, lunch: true, brunch: false, outdoor: false, notableOutdoor: false, notes: "Delicious classic tex mex food, quite popular" },
@@ -130,16 +130,16 @@ const PLACES = [
   { id: 56, name: "Jax", location: "Downtown", type: "Restaurant", foodType: "Seafood", kidFriendly: "no", vibe: "High-energy East Coast seafood", goodFor: "Special occasion, oysters and seafood", happyHour: true, dinner: true, lunch: false, brunch: false, outdoor: false, notableOutdoor: false, notes: "" },
   { id: 57, name: "Jeannot's Patisserie", location: "Lafayette", type: "Restaurant", foodType: "French", kidFriendly: "yes", vibe: "Bakery", goodFor: "Breakfast, pastries, French classics", happyHour: false, dinner: false, lunch: true, brunch: true, outdoor: true, notableOutdoor: false, notes: "" },
   { id: 58, name: "Jefe's", location: "Longmont", type: "Restaurant", foodType: "Mexican", kidFriendly: "yes", vibe: "Modern taco bar with vibrant murals", goodFor: "Casual lunch, tacos and tequila", happyHour: true, dinner: true, lunch: true, brunch: false, outdoor: false, notableOutdoor: false, notes: "" },
-  { id: 59, name: "Jet's Pizza", location: "Central Boulder", type: "Takeout", foodType: "Pizza", kidFriendly: "yes", vibe: "Detroit-style pizza takeout", goodFor: "Quick pizza pickup", happyHour: false, dinner: true, lunch: true, brunch: false, outdoor: false, notableOutdoor: false, notes: "" },
+  { id: 59, name: "Jet's Pizza", location: "Central Boulder", type: "Restaurant", foodType: "Pizza", kidFriendly: "yes", vibe: "Detroit-style pizza takeout", goodFor: "Quick pizza pickup", happyHour: false, dinner: true, lunch: true, brunch: false, outdoor: false, notableOutdoor: false, takeout: true, notes: "" },
   { id: 60, name: "Jill's at St Julian", location: "Downtown", type: "Restaurant", foodType: "New American", kidFriendly: "maybe", vibe: "Upscale modern bistro, farm-to-table", goodFor: "Special occasion, brunch", happyHour: false, dinner: true, lunch: true, brunch: true, outdoor: true, notableOutdoor: false, notes: "" },
-  { id: 61, name: "Jungle", location: "Downtown", type: "Bar & Restaurant", foodType: "Burgers", kidFriendly: "no", vibe: "trendy tiki theme, Tiki bar", goodFor: "Cocktails, casual burgers, happy hour", happyHour: true, dinner: true, lunch: false, brunch: false, outdoor: true, notableOutdoor: false, notes: "Great chicken sandwiches and super fun drinks in awesome glassware, such cool vibes!" },
+  { id: 61, name: "Jungle", location: "Downtown", type: "Restaurant", foodType: "Burgers", kidFriendly: "no", vibe: "trendy tiki theme, Tiki bar", goodFor: "Cocktails, casual burgers, happy hour", happyHour: true, dinner: true, lunch: false, brunch: false, outdoor: true, notableOutdoor: false, notes: "Great chicken sandwiches and super fun drinks in awesome glassware, such cool vibes!" },
   { id: 62, name: "Junkyard Social", location: "Central Boulder", type: "Brewery", foodType: "Brewery", kidFriendly: "yes", vibe: "Community space with art and adventure playground", goodFor: "Family hangout, kids activities", happyHour: false, dinner: false, lunch: true, brunch: false, outdoor: true, notableOutdoor: true, notes: "" },
-  { id: 63, name: "Kalita Grill Greek Cafe", location: "Central Boulder", type: "Takeout", foodType: "Mediterranean", kidFriendly: "yes", vibe: "Greek", goodFor: "Quick lunch, Greek Mediterranean", happyHour: false, dinner: true, lunch: true, brunch: false, outdoor: false, notableOutdoor: false, notes: "" },
+  { id: 63, name: "Kalita Grill Greek Cafe", location: "Central Boulder", type: "Restaurant", foodType: "Mediterranean", kidFriendly: "yes", vibe: "Greek", goodFor: "Quick lunch, Greek Mediterranean", happyHour: false, dinner: true, lunch: true, brunch: false, outdoor: false, notableOutdoor: false, takeout: true, notes: "" },
   { id: 64, name: "Kismet Cafe", location: "Lafayette", type: "", foodType: "Mediterranean", kidFriendly: "yes", vibe: "Mediterranean craft coffee shop", goodFor: "Coffee, breakfast, Turkish flavors", happyHour: false, dinner: false, lunch: true, brunch: true, outdoor: true, notableOutdoor: false, notes: "" },
   { id: 65, name: "Kitchen", location: "Downtown", type: "Restaurant", foodType: "New American", kidFriendly: "maybe", vibe: "Casual-elegant with globally-inspired shared plates", goodFor: "Date night, creative cocktails", happyHour: true, dinner: true, lunch: true, brunch: true, outdoor: false, notableOutdoor: false, notes: "" },
   { id: 66, name: "Kitchen Upstairs", location: "Downtown", type: "Restaurant", foodType: "New American", kidFriendly: "maybe", vibe: "Upstairs cocktail lounge with shared plates", goodFor: "Cocktails, date night", happyHour: false, dinner: true, lunch: false, brunch: false, outdoor: false, notableOutdoor: false, notes: "" },
   { id: 67, name: "Le French Cafe", location: "Central Boulder", type: "Restaurant", foodType: "French", kidFriendly: "yes", vibe: "Cafe", goodFor: "Breakfast, pastries, French lunch", happyHour: false, dinner: true, lunch: true, brunch: true, outdoor: false, notableOutdoor: false, notes: "" },
-  { id: 68, name: "Le Frigo", location: "East Boulder", type: "Takeout", foodType: "Deli", kidFriendly: "maybe", vibe: "European deli with gourmet provisions", goodFor: "Lunch sandwiches, cheese and charcuterie", happyHour: false, dinner: false, lunch: true, brunch: false, outdoor: false, notableOutdoor: false, notes: "" },
+  { id: 68, name: "Le Frigo", location: "East Boulder", type: "Restaurant", foodType: "Deli", kidFriendly: "maybe", vibe: "European deli with gourmet provisions", goodFor: "Lunch sandwiches, cheese and charcuterie", happyHour: false, dinner: false, lunch: true, brunch: false, outdoor: false, notableOutdoor: false, takeout: true, notes: "" },
   { id: 69, name: "Lefthand Brewing", location: "Longmont", type: "Brewery", foodType: "Brewery", kidFriendly: "maybe", vibe: "Award-winning neighborhood brewery", goodFor: "Craft beer, casual gathering", happyHour: false, dinner: false, lunch: false, brunch: false, outdoor: true, notableOutdoor: false, notes: "" },
   { id: 70, name: "License No 1", location: "Downtown", type: "Bar", foodType: "Bar", kidFriendly: "no", vibe: "Cocktail bar", goodFor: "Date night, cocktails, live music", happyHour: false, dinner: false, lunch: false, brunch: false, outdoor: false, notableOutdoor: false, notes: "" },
   { id: 71, name: "Liquid Mechanics", location: "Lafayette", type: "Brewery", foodType: "Brewery", kidFriendly: "yes", vibe: "Award-winning neighborhood craft brewery", goodFor: "Craft beer, neighborhood hangout", happyHour: true, dinner: true, lunch: false, brunch: false, outdoor: true, notableOutdoor: false, notes: "" },
@@ -155,7 +155,7 @@ const PLACES = [
   { id: 83, name: "Oak", location: "Downtown", type: "Restaurant", foodType: "New American", kidFriendly: "maybe", vibe: "Neighborhood New American with oak-fired oven", goodFor: "Special occasion, seasonal menus", happyHour: false, dinner: true, lunch: true, brunch: false, outdoor: false, notableOutdoor: false, notes: "" },
   { id: 84, name: "Odd 13", location: "Lafayette", type: "Brewery", foodType: "Brewery", kidFriendly: "maybe", vibe: "Experimental craft brewery with food trucks", goodFor: "Craft beer, casual gathering", happyHour: false, dinner: true, lunch: false, brunch: false, outdoor: true, notableOutdoor: false, notes: "" },
   { id: 85, name: "Osaka", location: "Central Boulder", type: "Restaurant", foodType: "Japanese", kidFriendly: "yes", vibe: "Upscale casual, Family oriented", goodFor: "", happyHour: false, dinner: true, lunch: false, brunch: false, outdoor: false, notableOutdoor: false, notes: "sushi was meh, the ramen and other main courses are good, they have okonomiyaki burgers on some days! Quite busy, recommendations recommended" },
-  { id: 86, name: "Oskar Blues", location: "Longmont", type: "Brewery & Restaurant", foodType: "American", kidFriendly: "maybe", vibe: "Pub", goodFor: "enclosed fenced in area", happyHour: false, dinner: true, lunch: true, brunch: false, outdoor: true, notableOutdoor: false, notes: "" },
+  { id: 86, name: "Oskar Blues", location: "Longmont", type: "Brewery", foodType: "American", kidFriendly: "maybe", vibe: "Pub", goodFor: "enclosed fenced in area", happyHour: false, dinner: true, lunch: true, brunch: false, outdoor: true, notableOutdoor: false, notes: "" },
   { id: 87, name: "Parkway Diner", location: "East Boulder", type: "Restaurant", foodType: "Mexican", kidFriendly: "yes", vibe: "Breakfast focus", goodFor: "Breakfast, Mexican specialties", happyHour: false, dinner: false, lunch: true, brunch: true, outdoor: false, notableOutdoor: false, notes: "" },
   { id: 88, name: "Pica's", location: "East Boulder", type: "Restaurant", foodType: "Mexican", kidFriendly: "yes", vibe: "Counter service but still charming", goodFor: "", happyHour: true, dinner: true, lunch: true, brunch: false, outdoor: true, notableOutdoor: false, notes: "Adorable patio, great spot for lunch or after work margaritas, ordering is fast food style but food is delicious, fast, and affordable" },
   { id: 89, name: "Pica's Louisville", location: "Louisville", type: "Restaurant", foodType: "Mexican", kidFriendly: "yes", vibe: "Casual Mexican taqueria with outdoor seating", goodFor: "Quick lunch, handmade tortillas", happyHour: false, dinner: true, lunch: true, brunch: false, outdoor: true, notableOutdoor: false, notes: "" },
@@ -165,24 +165,24 @@ const PLACES = [
   { id: 93, name: "Post Longmont", location: "Longmont", type: "Restaurant", foodType: "American", kidFriendly: "yes", vibe: "Chicken", goodFor: "", happyHour: false, dinner: true, lunch: true, brunch: true, outdoor: true, notableOutdoor: false, notes: "" },
   { id: 94, name: "Postinos", location: "Downtown", type: "Restaurant", foodType: "Italian", kidFriendly: "maybe", vibe: "Wine bar", goodFor: "Date night, wine, charcuterie", happyHour: true, dinner: true, lunch: true, brunch: true, outdoor: false, notableOutdoor: false, notes: "" },
   { id: 95, name: "Ras Kaasa", location: "Lafayette", type: "Restaurant", foodType: "Ethiopian", kidFriendly: "yes", vibe: "Casual family-style Ethiopian", goodFor: "Ethiopian family-style dining", happyHour: false, dinner: true, lunch: false, brunch: false, outdoor: false, notableOutdoor: false, notes: "Used to be in Boulder, delicious Ethiopian food, average atmosphere" },
-  { id: 96, name: "Rayback Collective", location: "Central Boulder", type: "Food Hall", foodType: "Multi-vendor", kidFriendly: "yes", vibe: "Food truck park with bar and outdoor seating", goodFor: "Casual group gathering, craft beer, dog-friendly", happyHour: false, dinner: true, lunch: true, brunch: false, outdoor: true, notableOutdoor: true, notes: "" },
+  { id: 96, name: "Rayback Collective", location: "Central Boulder", type: "Food Court", foodType: "Multi-vendor", kidFriendly: "yes", vibe: "Food truck park with bar and outdoor seating", goodFor: "Casual group gathering, craft beer, dog-friendly", happyHour: false, dinner: true, lunch: true, brunch: false, outdoor: true, notableOutdoor: true, notes: "" },
   { id: 97, name: "Rincon Argentino", location: "Central Boulder", type: "Restaurant", foodType: "Argentine", kidFriendly: "yes", vibe: "Casual Argentine eatery", goodFor: "Argentine specialties, casual family meal", happyHour: false, dinner: true, lunch: true, brunch: false, outdoor: true, notableOutdoor: false, notes: "" },
   { id: 98, name: "Rincon Del Sol", location: "Central Boulder", type: "Restaurant", foodType: "Mexican", kidFriendly: "yes", vibe: "Festive Mexican restaurant with bright decor", goodFor: "Mexican specialties, casual family dining", happyHour: false, dinner: true, lunch: true, brunch: false, outdoor: true, notableOutdoor: false, notes: "" },
   { id: 99, name: "Rio", location: "Downtown", type: "Restaurant", foodType: "Mexican", kidFriendly: "yes", vibe: "Trendy casual", goodFor: "Casual meals, family dining", happyHour: true, dinner: true, lunch: true, brunch: false, outdoor: true, notableOutdoor: true, notes: "GREAT rooftop and solid americanized Mexican food, often super busy, fave spot for tourists & college students with families - reservations are helpful" },
   { id: 100, name: "River and Woods", location: "Downtown", type: "Restaurant", foodType: "New American", kidFriendly: "maybe", vibe: "Upscale comfort food in historic miner's cabin", goodFor: "Date night, special occasions, weekend brunch", happyHour: true, dinner: true, lunch: true, brunch: true, outdoor: true, notableOutdoor: false, notes: "" },
-  { id: 101, name: "Rocky Flats Beergarden", location: "South Boulder", type: "Bar & Restaurant", foodType: "American", kidFriendly: "yes", vibe: "Beer garden", goodFor: "Group outings, families, dogs", happyHour: false, dinner: true, lunch: true, brunch: false, outdoor: true, notableOutdoor: true, notes: "" },
-  { id: 102, name: "Rocky Mountain Tap & Garden", location: "Arvada", type: "Bar & Restaurant", foodType: "American", kidFriendly: "maybe", vibe: "Casual bar with self-pour tap wall", goodFor: "Casual drinks, laid-back vibe", happyHour: true, dinner: true, lunch: false, brunch: false, outdoor: true, notableOutdoor: false, notes: "" },
+  { id: 101, name: "Rocky Flats Beergarden", location: "South Boulder", type: "Restaurant", foodType: "American", kidFriendly: "yes", vibe: "Beer garden", goodFor: "Group outings, families, dogs", happyHour: false, dinner: true, lunch: true, brunch: false, outdoor: true, notableOutdoor: true, notes: "" },
+  { id: 102, name: "Rocky Mountain Tap & Garden", location: "Arvada", type: "Restaurant", foodType: "American", kidFriendly: "maybe", vibe: "Casual bar with self-pour tap wall", goodFor: "Casual drinks, laid-back vibe", happyHour: true, dinner: true, lunch: false, brunch: false, outdoor: true, notableOutdoor: false, notes: "" },
   { id: 103, name: "Roost", location: "Longmont", type: "Restaurant", foodType: "New American", kidFriendly: "maybe", vibe: "Casual craft restaurant with rooftop dining", goodFor: "Brunch, dinner, group meals", happyHour: false, dinner: true, lunch: true, brunch: true, outdoor: true, notableOutdoor: false, notes: "" },
-  { id: 104, name: "Rosetta Hall", location: "Downtown", type: "Food Hall", foodType: "Multi-vendor", kidFriendly: "yes", vibe: "Modern luxe food hall with multiple cuisines", goodFor: "Diverse dining, groups", happyHour: false, dinner: true, lunch: true, brunch: false, outdoor: true, notableOutdoor: true, notes: "" },
+  { id: 104, name: "Rosetta Hall", location: "Downtown", type: "Food Court", foodType: "Multi-vendor", kidFriendly: "yes", vibe: "Modern luxe food hall with multiple cuisines", goodFor: "Diverse dining, groups", happyHour: false, dinner: true, lunch: true, brunch: false, outdoor: true, notableOutdoor: true, notes: "" },
   { id: 105, name: "Salt", location: "Downtown", type: "Restaurant", foodType: "New American", kidFriendly: "maybe", vibe: "Cozy-fine dining, locally sourced", goodFor: "Date night, special occasions", happyHour: true, dinner: true, lunch: true, brunch: true, outdoor: true, notableOutdoor: false, notes: "" },
   { id: 106, name: "Santos", location: "North Boulder", type: "Restaurant", foodType: "Mexican", kidFriendly: "yes", vibe: "New Mexican style", goodFor: "Dinner, breakfast burritos, lunch", happyHour: false, dinner: true, lunch: true, brunch: true, outdoor: true, notableOutdoor: true, notes: "" },
   { id: 107, name: "Sherpas Downtown", location: "Downtown", type: "Restaurant", foodType: "Indian", kidFriendly: "yes", vibe: "Nepalese", goodFor: "Lunch, dinner, families", happyHour: false, dinner: true, lunch: true, brunch: false, outdoor: false, notableOutdoor: false, notes: "" },
-  { id: 108, name: "Sherpas in East Boulder", location: "East Boulder", type: "Takeout", foodType: "Indian", kidFriendly: "yes", vibe: "Nepalese", goodFor: "Quick meals, lunch", happyHour: false, dinner: true, lunch: true, brunch: false, outdoor: false, notableOutdoor: false, notes: "" },
+  { id: 108, name: "Sherpas in East Boulder", location: "East Boulder", type: "Restaurant", foodType: "Indian", kidFriendly: "yes", vibe: "Nepalese", goodFor: "Quick meals, lunch", happyHour: false, dinner: true, lunch: true, brunch: false, outdoor: false, notableOutdoor: false, takeout: true, notes: "" },
   { id: 109, name: "Shoes and Brews", location: "Longmont", type: "Brewery", foodType: "Brewery", kidFriendly: "yes", vibe: "Running shoe store with taproom", goodFor: "Casual drinks, community gatherings", happyHour: false, dinner: false, lunch: false, brunch: false, outdoor: true, notableOutdoor: false, notes: "" },
-  { id: 110, name: "Snarfburger", location: "Downtown", type: "Takeout", foodType: "Burgers", kidFriendly: "yes", vibe: "Casual burger shack, quick service", goodFor: "Quick lunch, burgers", happyHour: false, dinner: true, lunch: true, brunch: false, outdoor: false, notableOutdoor: false, notes: "" },
+  { id: 110, name: "Snarfburger", location: "Downtown", type: "Restaurant", foodType: "Burgers", kidFriendly: "yes", vibe: "Casual burger shack, quick service", goodFor: "Quick lunch, burgers", happyHour: false, dinner: true, lunch: true, brunch: false, outdoor: false, notableOutdoor: false, takeout: true, notes: "" },
   { id: 111, name: "Snooze", location: "Downtown", type: "Restaurant", foodType: "Brunch/Cafe", kidFriendly: "yes", vibe: "Trendy brunch spot with full bar", goodFor: "Brunch, breakfast", happyHour: false, dinner: false, lunch: false, brunch: true, outdoor: false, notableOutdoor: false, notes: "" },
   { id: 112, name: "South Side Walnut Cafe", location: "South Boulder", type: "Restaurant", foodType: "Brunch/Cafe", kidFriendly: "yes", vibe: "Casual neighborhood breakfast cafe", goodFor: "Brunch, breakfast, lunch", happyHour: false, dinner: false, lunch: true, brunch: true, outdoor: true, notableOutdoor: false, notes: "" },
-  { id: 113, name: "Southern Sun", location: "South Boulder", type: "Brewery & Restaurant", foodType: "American", kidFriendly: "maybe", vibe: "Pub", goodFor: "Beer, burgers, casual dining", happyHour: true, dinner: true, lunch: true, brunch: false, outdoor: true, notableOutdoor: false, notes: "Nice patio if you can get a spot, Boulder classic, delicious burgers and sandwiches, wings and nachos, solid beer, affordable delicious food and laid back atmosphere" },
+  { id: 113, name: "Southern Sun", location: "South Boulder", type: "Brewery", foodType: "American", kidFriendly: "maybe", vibe: "Pub", goodFor: "Beer, burgers, casual dining", happyHour: true, dinner: true, lunch: true, brunch: false, outdoor: true, notableOutdoor: false, notes: "Nice patio if you can get a spot, Boulder classic, delicious burgers and sandwiches, wings and nachos, solid beer, affordable delicious food and laid back atmosphere" },
   { id: 114, name: "Spruce and Fish at the Boulderado", location: "Downtown", type: "Restaurant", foodType: "Seafood", kidFriendly: "maybe", vibe: "Upscale seafood in historic building", goodFor: "Date night, special occasions, brunch", happyHour: false, dinner: true, lunch: false, brunch: true, outdoor: false, notableOutdoor: false, notes: "" },
   { id: 115, name: "Stella's", location: "Downtown", type: "Restaurant", foodType: "Italian", kidFriendly: "no", vibe: "Swanky great gatsby, Mediterranean influenced", goodFor: "Date night, special occasions", happyHour: false, dinner: true, lunch: false, brunch: false, outdoor: false, notableOutdoor: false, notes: "FANCY and PRICEY. Fun atmosphere and cool design - good place for a nice date or a special occasion with friends" },
   { id: 116, name: "Sushi Zanmai", location: "Downtown", type: "Restaurant", foodType: "Asian", kidFriendly: "maybe", vibe: "Japanese sushi bar with karaoke", goodFor: "Dinner, karaoke", happyHour: false, dinner: true, lunch: true, brunch: false, outdoor: false, notableOutdoor: false, notes: "" },
@@ -193,9 +193,9 @@ const PLACES = [
   { id: 121, name: "The Attic", location: "Downtown", type: "Bar", foodType: "Bar", kidFriendly: "no", vibe: "Neighborhood bar with Wisconsin-style food", goodFor: "Drinks, happy hour, pool", happyHour: true, dinner: true, lunch: false, brunch: false, outdoor: false, notableOutdoor: false, notes: "" },
   { id: 122, name: "The Sink", location: "The Hill", type: "Restaurant", foodType: "Burgers", kidFriendly: "yes", vibe: "Also pizza", goodFor: "Burgers, casual meals, college atmosphere", happyHour: false, dinner: true, lunch: true, brunch: false, outdoor: false, notableOutdoor: false, notes: "" },
   { id: 123, name: "Tierra y Fuego Taqueria", location: "North Boulder", type: "Restaurant", foodType: "Mexican", kidFriendly: "yes", vibe: "Casual authentic Mexican", goodFor: "Quick meals, breakfast burritos, lunch", happyHour: false, dinner: true, lunch: true, brunch: true, outdoor: false, notableOutdoor: false, notes: "" },
-  { id: 124, name: "Tiffins India Cafe", location: "Central Boulder", type: "Takeout", foodType: "Indian", kidFriendly: "maybe", vibe: "Casual Indian takeout", goodFor: "take out", happyHour: false, dinner: true, lunch: true, brunch: false, outdoor: false, notableOutdoor: false, notes: "" },
+  { id: 124, name: "Tiffins India Cafe", location: "Central Boulder", type: "Restaurant", foodType: "Indian", kidFriendly: "maybe", vibe: "Casual Indian takeout", goodFor: "take out", happyHour: false, dinner: true, lunch: true, brunch: false, outdoor: false, notableOutdoor: false, takeout: true, notes: "" },
   { id: 125, name: "Tip Top Pies", location: "Lafayette", type: "Restaurant", foodType: "Other", kidFriendly: "yes", vibe: "New Zealand pies", goodFor: "Quick lunch, pastries, pies", happyHour: false, dinner: true, lunch: true, brunch: false, outdoor: false, notableOutdoor: false, notes: "" },
-  { id: 126, name: "Twisted Pine Brewing", location: "Boulder", type: "Brewery & Restaurant", foodType: "Pizza", kidFriendly: "yes", vibe: "Neighborhood brewery with pizza", goodFor: "Craft beer, pizza, casual hangout", happyHour: false, dinner: true, lunch: false, brunch: false, outdoor: true, notableOutdoor: false, notes: "" },
+  { id: 126, name: "Twisted Pine Brewing", location: "Boulder", type: "Brewery", foodType: "Pizza", kidFriendly: "yes", vibe: "Neighborhood brewery with pizza", goodFor: "Craft beer, pizza, casual hangout", happyHour: false, dinner: true, lunch: false, brunch: false, outdoor: true, notableOutdoor: false, notes: "" },
   { id: 127, name: "Upslope", location: "Boulder", type: "Brewery", foodType: "Burgers", kidFriendly: "yes", vibe: "Craft brewery with mountain views", goodFor: "Beer tasting, casual hangout", happyHour: true, dinner: true, lunch: false, brunch: false, outdoor: true, notableOutdoor: false, notes: "Burger joint closes before brewery!! Be careful about going there hungry. Burgers are good though!" },
   { id: 128, name: "Urban Field Pizza", location: "Longmont", type: "Restaurant", foodType: "Pizza", kidFriendly: "yes", vibe: "Casual pizza and market restaurant", goodFor: "Pizza, lunch, market items", happyHour: false, dinner: true, lunch: true, brunch: false, outdoor: false, notableOutdoor: false, notes: "" },
   { id: 147, name: "Proto's Pizza North Boulder", location: "North Boulder", type: "Restaurant", foodType: "Pizza", kidFriendly: "yes", vibe: "Fun, casual", goodFor: "", happyHour: false, dinner: true, lunch: true, brunch: false, outdoor: false, notableOutdoor: false, notes: "Thin charred crust pizza since 1999. Full bar." },
@@ -203,7 +203,7 @@ const PLACES = [
   { id: 149, name: "Call Your Mother", location: "Central Boulder", type: "Restaurant", foodType: "Deli", kidFriendly: "yes", vibe: "Playful Brooklyn-meets-Boca", goodFor: "Breakfast, lunch, bagels", happyHour: false, dinner: false, lunch: true, brunch: true, outdoor: false, notableOutdoor: false, notes: "Fresh-baked bagels daily. 29th Street Mall location." },
   { id: 150, name: "Aperitivo", location: "Gunbarrel", type: "Restaurant", foodType: "New American", kidFriendly: "yes", vibe: "Sleek modern, understated elegance", goodFor: "Brunch, dinner, date night", happyHour: false, dinner: true, lunch: true, brunch: true, outdoor: true, notableOutdoor: false, notes: "Global fusion, locally sourced. Great patio." },
   { id: 151, name: "Bucatino Trattoria Romana", location: "Lafayette", type: "Restaurant", foodType: "Italian", kidFriendly: "maybe", vibe: "Rustic modern, spacious", goodFor: "Dinner", happyHour: false, dinner: true, lunch: false, brunch: false, outdoor: false, notableOutdoor: false, notes: "Chef Marco Monnanni. Homemade thick hollow pasta. Full bar." },
-  { id: 152, name: "Dillinger's Food & Spirits", location: "Lafayette", type: "Bar & Restaurant", foodType: "American", kidFriendly: "maybe", vibe: "Casual neighborhood bar", goodFor: "Live music, drinks", happyHour: false, dinner: true, lunch: true, brunch: false, outdoor: false, notableOutdoor: false, notes: "30+ years. Live bands Fri, karaoke Wed/Sat." },
+  { id: 152, name: "Dillinger's Food & Spirits", location: "Lafayette", type: "Restaurant", foodType: "American", kidFriendly: "maybe", vibe: "Casual neighborhood bar", goodFor: "Live music, drinks", happyHour: false, dinner: true, lunch: true, brunch: false, outdoor: false, notableOutdoor: false, notes: "30+ years. Live bands Fri, karaoke Wed/Sat." },
   { id: 153, name: "Moxie Bread Co", location: "Louisville", type: "Restaurant", foodType: "Brunch/Cafe", kidFriendly: "yes", vibe: "Community bakery in historic home", goodFor: "Pastries, breakfast, lunch", happyHour: false, dinner: false, lunch: true, brunch: true, outdoor: false, notableOutdoor: false, notes: "Organic fresh-milled heirloom grains." },
   { id: 154, name: "Parma Trattoria & Mozzarella Bar", location: "Louisville", type: "Restaurant", foodType: "Italian", kidFriendly: "maybe", vibe: "Casual elegant", goodFor: "Dinner, date night", happyHour: false, dinner: true, lunch: false, brunch: false, outdoor: true, notableOutdoor: false, notes: "Fresh mozzarella bar. Organic ingredients." },
   { id: 155, name: "740 Front", location: "Louisville", type: "Restaurant", foodType: "New American", kidFriendly: "maybe", vibe: "Historic 1904 saloon, elegant", goodFor: "Dinner, date night, special occasion", happyHour: false, dinner: true, lunch: false, brunch: false, outdoor: false, notableOutdoor: false, notes: "Historic landmark with 1880 bar. Steaks. Four private rooms." },
@@ -211,7 +211,7 @@ const PLACES = [
   { id: 157, name: "Gravity Brewing", location: "Louisville", type: "Brewery", foodType: "Brewery", kidFriendly: "yes", vibe: "Laid-back neighborhood brewery", goodFor: "", happyHour: false, dinner: false, lunch: false, brunch: false, outdoor: false, notableOutdoor: false, notes: "Award-winning craft beers. Pizza from Double D's Sourdough Pizzeria." },
   { id: 158, name: "LuLu's BBQ", location: "Louisville", type: "Restaurant", foodType: "American", kidFriendly: "yes", vibe: "Casual, BBQ", goodFor: "Lunch, dinner", happyHour: false, dinner: true, lunch: true, brunch: false, outdoor: false, notableOutdoor: false, notes: "Texas-style low and slow. Daily smoked meats, usually sold out by evening." },
   { id: 159, name: "The Huckleberry", location: "Louisville", type: "Restaurant", foodType: "Brunch/Cafe", kidFriendly: "yes", vibe: "Fun, creative comfort", goodFor: "Brunch, breakfast", happyHour: false, dinner: false, lunch: true, brunch: true, outdoor: false, notableOutdoor: false, notes: "Historic 1898 building. On-site bakery. Funky Country cuisine." },
-  { id: 160, name: "Longs Peak Pub", location: "Longmont", type: "Brewery & Restaurant", foodType: "American", kidFriendly: "yes", vibe: "Pub, spacious patio", goodFor: "", happyHour: false, dinner: true, lunch: true, brunch: false, outdoor: true, notableOutdoor: false, notes: "Mountain Sun group. 21 craft beers on tap. Cornhole. No TV." },
+  { id: 160, name: "Longs Peak Pub", location: "Longmont", type: "Brewery", foodType: "American", kidFriendly: "yes", vibe: "Pub, spacious patio", goodFor: "", happyHour: false, dinner: true, lunch: true, brunch: false, outdoor: true, notableOutdoor: false, notes: "Mountain Sun group. 21 craft beers on tap. Cornhole. No TV." },
   { id: 161, name: "Martinis Bistro", location: "Longmont", type: "Restaurant", foodType: "New American", kidFriendly: "maybe", vibe: "Elegant classic, 1890s home", goodFor: "Dinner, date night, special occasion", happyHour: true, dinner: true, lunch: false, brunch: false, outdoor: false, notableOutdoor: false, notes: "Famous for generous martinis. Happy hour available." },
   { id: 162, name: "Cimmini's", location: "Niwot", type: "Restaurant", foodType: "Italian", kidFriendly: "maybe", vibe: "Cozy neighborhood Italian", goodFor: "Dinner", happyHour: false, dinner: true, lunch: false, brunch: false, outdoor: false, notableOutdoor: false, notes: "Family-owned, chef-led. Authentic made-from-scratch dishes." }
 ];
@@ -219,21 +219,15 @@ const PLACES = [
 const TYPE_COLORS = {
   "Restaurant": "from-violet-500 to-purple-600",
   "Brewery": "from-amber-500 to-yellow-600",
-  "Brewery & Restaurant": "from-orange-500 to-amber-600",
   "Bar": "from-rose-500 to-pink-600",
-  "Bar & Restaurant": "from-fuchsia-500 to-pink-600",
-  "Food Hall": "from-emerald-500 to-teal-600",
-  "Takeout": "from-sky-500 to-blue-600",
+  "Food Court": "from-emerald-500 to-teal-600",
 };
 
 const TYPE_BG = {
   "Restaurant": "bg-violet-100 text-violet-700",
   "Brewery": "bg-amber-100 text-amber-700",
-  "Brewery & Restaurant": "bg-orange-100 text-orange-700",
   "Bar": "bg-rose-100 text-rose-700",
-  "Bar & Restaurant": "bg-fuchsia-100 text-fuchsia-700",
-  "Food Hall": "bg-emerald-100 text-emerald-700",
-  "Takeout": "bg-sky-100 text-sky-700",
+  "Food Court": "bg-emerald-100 text-emerald-700",
 };
 
 function haversine(lat1, lng1, lat2, lng2) {
@@ -254,6 +248,7 @@ function Toggle({ label, active, onClick, color = "blue" }) {
     purple: active ? "bg-purple-600 text-white shadow-lg shadow-purple-200" : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-300 shadow-sm",
     rose: active ? "bg-rose-500 text-white shadow-lg shadow-rose-200" : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-300 shadow-sm",
     teal: active ? "bg-teal-500 text-white shadow-lg shadow-teal-200" : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-300 shadow-sm",
+    orange: active ? "bg-orange-500 text-white shadow-lg shadow-orange-200" : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-300 shadow-sm",
   };
   return (
     <button
@@ -313,19 +308,18 @@ function EditForm({ place, onSave, onCancel, locations, types, foodTypes, existi
 
       // --- Auto-detect Type from Google types ---
       let autoType = "";
+      let autoTakeout = false;
       const hasType = (t) => gTypes.includes(t);
       if (hasType("brewery")) {
-        autoType = (hasType("restaurant") || hasType("food")) ? "Brewery & Restaurant" : "Brewery";
-      } else if (hasType("bar") && (hasType("restaurant") || hasType("food"))) {
-        autoType = "Bar & Restaurant";
+        autoType = "Brewery";
       } else if (hasType("bar") || hasType("night_club")) {
         autoType = "Bar";
-      } else if (hasType("meal_takeaway") || hasType("meal_delivery")) {
-        autoType = "Takeout";
-      } else if (hasType("bakery")) {
-        autoType = "Takeout";
-      } else if (hasType("restaurant") || hasType("food") || hasType("cafe")) {
+      } else if (hasType("restaurant") || hasType("food") || hasType("cafe") || hasType("bakery")) {
         autoType = "Restaurant";
+      }
+      // Auto-detect takeout
+      if (hasType("meal_takeaway") || hasType("meal_delivery") || hasType("bakery")) {
+        autoTakeout = true;
       }
 
       // --- Auto-detect Food Type from Google types ---
@@ -374,6 +368,7 @@ function EditForm({ place, onSave, onCancel, locations, types, foodTypes, existi
         brunch: f.brunch || autoBrunch,
         lunch: f.lunch || autoLunch,
         dinner: f.dinner || autoDinner,
+        takeout: f.takeout || autoTakeout,
       }));
     });
     autocompleteRef.current = ac;
@@ -490,6 +485,7 @@ function EditForm({ place, onSave, onCancel, locations, types, foodTypes, existi
           { key: "happyHour", label: "Happy Hour", color: "amber" },
           { key: "kidsAndBeers", label: "Kids & Beers", color: "blue" },
           { key: "dateNight", label: "Date Night", color: "rose" },
+          { key: "takeout", label: "🥡 Takeout", color: "orange" },
         ].map((t) => (
           <Toggle key={t.key} label={t.label} active={!!form[t.key]} onClick={() => set(t.key, !form[t.key])} color={t.color} />
         ))}
@@ -557,6 +553,7 @@ function PlaceRow({ place, isExpanded, onToggle, user, onEdit, onDelete, radiusM
   else if (place.outdoor) badges.push({ label: "Patio", color: "bg-teal-100 text-teal-700" });
   if (place.dateNight) badges.push({ label: "Date Night", color: "bg-rose-100 text-rose-700" });
   if (place.kidsAndBeers) badges.push({ label: "Kids & Beers", color: "bg-blue-100 text-blue-700" });
+  if (place.takeout) badges.push({ label: "🥡 Takeout", color: "bg-orange-100 text-orange-700" });
 
   const meals = [];
   if (place.dinner) meals.push("Dinner");
@@ -742,6 +739,7 @@ function SpotFinder() {
   const [filterBrunch, setFilterBrunch] = useState(false);
   const [filterDateNight, setFilterDateNight] = useState(false);
   const [filterKidsAndBeers, setFilterKidsAndBeers] = useState(false);
+  const [filterTakeout, setFilterTakeout] = useState(false);
   const [openNowCache, setOpenNowCache] = useState({}); // { placeId: { isOpen: bool, checkedAt: timestamp } }
   const [openNowChecked, setOpenNowChecked] = useState(false); // true once we've checked hours
   const [showForm, setShowForm] = useState(false);
@@ -1027,6 +1025,27 @@ function SpotFinder() {
   // Check if migration is needed (any places missing the new fields)
   const needsTagMigration = places.some((p) => p.dateNight === undefined || p.kidsAndBeers === undefined);
 
+  // === TYPE CONSOLIDATION MIGRATION ===
+  const OLD_TYPES = ["Brewery & Restaurant", "Bar & Restaurant", "Food Hall", "Takeout"];
+  const needsTypeMigration = places.some((p) => OLD_TYPES.includes(p.type));
+
+  const handleTypeMigration = async () => {
+    if (!user || !db) { alert("Sign in first."); return; }
+    const typeMap = { "Brewery & Restaurant": "Brewery", "Bar & Restaurant": "Restaurant", "Food Hall": "Food Court", "Takeout": "Restaurant" };
+    let updated = 0;
+    for (const p of places) {
+      if (!p._docId || !OLD_TYPES.includes(p.type)) continue;
+      const updateData = { type: typeMap[p.type] };
+      // If it was "Takeout" type, also set the takeout flag
+      if (p.type === "Takeout") updateData.takeout = true;
+      try {
+        await db.collection("restaurants").doc(p._docId).update(updateData);
+        updated++;
+      } catch (e) { console.warn("Failed to migrate type:", p.name, e); }
+    }
+    alert("Type migration complete: " + updated + " places updated.");
+  };
+
   // === LOCATION CONSOLIDATION MIGRATION ===
   const BOULDER_LOCATIONS = ["Central Boulder", "Downtown", "East Boulder", "North Boulder", "South Boulder", "The Hill"];
   const needsLocationMigration = places.some((p) => BOULDER_LOCATIONS.includes(p.location));
@@ -1292,14 +1311,14 @@ function SpotFinder() {
 
   // === EXPORT TO SPREADSHEET ===
   const handleExport = () => {
-    const headers = ["Name", "Location", "Type", "Food Type", "Kid Friendly", "Vibe", "Good For", "Happy Hour", "Dinner", "Lunch", "Breakfast/Brunch", "Has Outdoor Space", "Notable Outdoor Space", "Date Night", "Kids & Beers", "Notes", "Address", "Phone", "Website"];
+    const headers = ["Name", "Location", "Type", "Food Type", "Kid Friendly", "Vibe", "Good For", "Happy Hour", "Dinner", "Lunch", "Breakfast/Brunch", "Has Outdoor Space", "Notable Outdoor Space", "Date Night", "Kids & Beers", "Takeout", "Notes", "Address", "Phone", "Website"];
     const rows = places.map((p) => [
       p.name || "", p.location || "", p.type || "", p.foodType || "",
       p.kidFriendly === "very" ? "Very" : p.kidFriendly === "yes" ? "Y" : p.kidFriendly === "maybe" ? "Maybe" : p.kidFriendly === "no" ? "N" : "",
       p.vibe || "", p.goodFor || "",
       p.happyHour ? "Y" : "N", p.dinner ? "Y" : "N", p.lunch ? "Y" : "N", p.brunch ? "Y" : "N",
       p.outdoor ? "Y" : "N", p.notableOutdoor ? "Y" : "N",
-      p.dateNight ? "Y" : "N", p.kidsAndBeers ? "Y" : "N",
+      p.dateNight ? "Y" : "N", p.kidsAndBeers ? "Y" : "N", p.takeout ? "Y" : "N",
       p.notes || "", p.address || "", p.phone || "", p.website || ""
     ]);
     const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
@@ -1332,6 +1351,7 @@ function SpotFinder() {
       if (filterBrunch && !p.brunch) return false;
       if (filterDateNight && !p.dateNight) return false;
       if (filterKidsAndBeers && !p.kidsAndBeers) return false;
+      if (filterTakeout && !p.takeout) return false;
 
       // Radius filter: skip places without coordinates
       if (radiusMode && radiusCenter) {
@@ -1354,15 +1374,15 @@ function SpotFinder() {
     }
 
     return result;
-  }, [places, search, filterLocations, filterTypes, filterFoodTypes, filterKidFriendly, filterHappyHour, filterOutdoor, filterDinner, filterLunch, filterBrunch, filterDateNight, filterKidsAndBeers, radiusMode, radiusCenter, radiusMiles]);
+  }, [places, search, filterLocations, filterTypes, filterFoodTypes, filterKidFriendly, filterHappyHour, filterOutdoor, filterDinner, filterLunch, filterBrunch, filterDateNight, filterKidsAndBeers, filterTakeout, radiusMode, radiusCenter, radiusMiles]);
 
-  const hasActiveFilters = search || filterLocations.length > 0 || filterTypes.length > 0 || filterFoodTypes.length > 0 || filterKidFriendly || filterHappyHour || filterOutdoor || filterDinner || filterLunch || filterBrunch || filterDateNight || filterKidsAndBeers || radiusMode;
+  const hasActiveFilters = search || filterLocations.length > 0 || filterTypes.length > 0 || filterFoodTypes.length > 0 || filterKidFriendly || filterHappyHour || filterOutdoor || filterDinner || filterLunch || filterBrunch || filterDateNight || filterKidsAndBeers || filterTakeout || radiusMode;
 
   const clearFilters = () => {
     setSearch(""); setFilterLocations([]); setFilterTypes([]); setFilterFoodTypes([]);
     setFilterKidFriendly(false); setFilterHappyHour(false); setFilterOutdoor(false);
     setFilterDinner(false); setFilterLunch(false); setFilterBrunch(false);
-    setFilterDateNight(false); setFilterKidsAndBeers(false); clearRadius();
+    setFilterDateNight(false); setFilterKidsAndBeers(false); setFilterTakeout(false); clearRadius();
   };
 
   return (
@@ -1435,6 +1455,7 @@ function SpotFinder() {
             <Toggle label="🍷" active={filterDateNight} onClick={() => setFilterDateNight(!filterDateNight)} color="rose" />
             <Toggle label="👶🍺" active={filterKidsAndBeers} onClick={() => setFilterKidsAndBeers(!filterKidsAndBeers)} color="blue" />
             <Toggle label="Happy Hour" active={filterHappyHour} onClick={() => setFilterHappyHour(!filterHappyHour)} color="amber" />
+            <Toggle label="🥡" active={filterTakeout} onClick={() => setFilterTakeout(!filterTakeout)} color="orange" />
           </div>
 
           {/* Row 4: Radius Filter */}
@@ -1617,6 +1638,11 @@ function SpotFinder() {
               {user && needsTagMigration && (
                 <button onClick={handleTagMigration} disabled={tagging} className="text-xs text-rose-400 hover:text-rose-600 font-medium hover:underline disabled:opacity-50">
                   {tagging ? tagProgress : "Apply Date Night & Kids Tags"}
+                </button>
+              )}
+              {user && needsTypeMigration && (
+                <button onClick={handleTypeMigration} className="text-xs text-amber-400 hover:text-amber-600 font-medium hover:underline">
+                  Consolidate Types ({places.filter((p) => OLD_TYPES.includes(p.type)).length} to update)
                 </button>
               )}
               {user && window.GOOGLE_MAPS_READY && (
