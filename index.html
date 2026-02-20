@@ -570,6 +570,22 @@ function EditForm({ place, onSave, onCancel, onDelete, locations, types, foodTyp
 }
 
 function PlaceRow({ place, isExpanded, onToggle, user, onEdit, onDelete, radiusMode, radiusCenter, openStatus }) {
+  const [photoUrl, setPhotoUrl] = React.useState(null);
+  const [photoLoaded, setPhotoLoaded] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!isExpanded || photoUrl || !place.googlePlaceId || !window.GOOGLE_MAPS_READY) return;
+    const mapDiv = document.createElement("div");
+    const service = new google.maps.places.PlacesService(mapDiv);
+    service.getDetails({ placeId: place.googlePlaceId, fields: ["photos"] }, (result, status) => {
+      if (status === "OK" && result && result.photos && result.photos.length > 0) {
+        setPhotoUrl(result.photos[0].getUrl({ maxWidth: 200, maxHeight: 200 }));
+      } else {
+        setPhotoUrl("none");
+      }
+    });
+  }, [isExpanded, place.googlePlaceId]);
+
   const isClosed = openStatus && openStatus.isOpen === false;
   const gradient = TYPE_COLORS[place.type] || "from-gray-400 to-gray-500";
   const typeBg = TYPE_BG[place.type] || "bg-gray-100 text-gray-700";
@@ -653,53 +669,70 @@ function PlaceRow({ place, isExpanded, onToggle, user, onEdit, onDelete, radiusM
       {isExpanded && (
         <div className="absolute left-2 right-2 z-10 mt-1">
         <div className="bg-white rounded-xl px-3 pb-3 pt-2 shadow-lg ring-2 ring-purple-100 relative">
-          <button onClick={(e) => { e.stopPropagation(); onToggle(); }} className="absolute top-2 right-2.5 text-gray-400 hover:text-gray-600 text-lg font-bold leading-none">✕</button>
-          <div className="flex items-center gap-2 mb-2 flex-wrap pr-6">
-            <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full ${typeBg}`}>{place.type}</span>
-            <span className="text-xs font-medium text-gray-500">{place.location}</span>
-            {place.foodType && <span className="text-xs text-gray-400">&middot; {place.foodType}</span>}
+          <button onClick={(e) => { e.stopPropagation(); onToggle(); }} className="absolute top-2 right-2.5 text-gray-400 hover:text-gray-600 text-lg font-bold leading-none z-10">✕</button>
+
+          <div className="flex gap-3">
+            {/* Photo on the left */}
+            <div className="shrink-0 w-20 h-20 rounded-lg overflow-hidden bg-gray-100 mt-1">
+              {photoUrl && photoUrl !== "none" ? (
+                <img src={photoUrl} alt={place.name} onLoad={() => setPhotoLoaded(true)} className={`w-full h-full object-cover transition-opacity ${photoLoaded ? "opacity-100" : "opacity-0"}`} />
+              ) : photoUrl === "none" ? (
+                <div className="w-full h-full flex items-center justify-center text-2xl text-gray-300">📍</div>
+              ) : (
+                <div className="w-full h-full flex items-center justify-center"><div className="w-5 h-5 border-2 border-purple-300 border-t-transparent rounded-full animate-spin" /></div>
+              )}
+            </div>
+
+            {/* Info on the right */}
+            <div className="flex-1 min-w-0 pr-5">
+              <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full ${typeBg}`}>{place.type}</span>
+                <span className="text-xs font-medium text-gray-500">{place.location}</span>
+                {place.foodType && <span className="text-xs text-gray-400">&middot; {place.foodType}</span>}
+              </div>
+
+              {badges.length > 0 && (
+                <div className="flex gap-1 mb-1.5 flex-wrap">
+                  {badges.map((b) => (
+                    <span key={b.label} className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${b.color}`}>{b.label}</span>
+                  ))}
+                </div>
+              )}
+
+              {place.vibe && <p className="text-xs text-gray-600 mb-1"><span className="text-purple-400 font-medium">Vibe:</span> {place.vibe}</p>}
+            </div>
           </div>
 
-          {badges.length > 0 && (
-            <div className="flex gap-1.5 mb-2 flex-wrap">
-              {badges.map((b) => (
-                <span key={b.label} className={`text-xs font-bold px-2.5 py-0.5 rounded-full ${b.color}`}>{b.label}</span>
-              ))}
-            </div>
-          )}
+          {place.notes && <p className="text-gray-400 italic text-xs mt-2 bg-gray-50 rounded-lg px-3 py-2">{place.notes}</p>}
 
-          {(place.phone || place.website || (place.lat && place.lng)) && (
-            <div className="flex flex-wrap gap-2 mb-2 items-center">
+          {(place.phone || place.website) && (
+            <div className="flex flex-wrap gap-2 mt-2 items-center">
               {place.phone && (
                 <a href={"tel:" + place.phone} className="bg-blue-50 text-blue-600 text-xs font-bold px-3 py-1.5 rounded-full hover:bg-blue-100">{place.phone}</a>
               )}
               {place.website && (
                 <a href={place.website} target="_blank" rel="noopener noreferrer" className="bg-blue-50 text-blue-600 text-xs font-bold px-3 py-1.5 rounded-full hover:bg-blue-100">Website</a>
               )}
-              <div className="flex-1" />
-              {place.lat && place.lng && (
-                <a href={"https://www.google.com/maps/dir/?api=1&destination=" + place.lat + "," + place.lng} target="_blank" rel="noopener noreferrer" className="bg-blue-500 text-white text-xs font-bold px-3 py-1.5 rounded-full hover:bg-blue-600 inline-flex items-center">
-                  Go
-                </a>
-              )}
             </div>
           )}
 
-          <div className="text-sm text-gray-600 space-y-1">
-            {place.vibe && <p><span className="text-purple-400 font-medium">Vibe:</span> {place.vibe}</p>}
-            {place.notes && <p className="text-gray-400 italic text-xs mt-1.5 bg-gray-50 rounded-lg px-3 py-2">{place.notes}</p>}
-            {!place.vibe && !place.notes && !place.foodType && badges.length === 0 && (
-              <p className="text-gray-300 italic text-xs">No details yet</p>
-            )}
-          </div>
+          {!place.vibe && !place.notes && !place.foodType && badges.length === 0 && (
+            <p className="text-gray-300 italic text-xs mt-2">No details yet</p>
+          )}
 
-          {user && (
-            <div className="flex gap-2 mt-3 pt-2 border-t border-purple-50">
+          <div className="flex items-center mt-3 pt-2 border-t border-purple-50">
+            {user && (
               <button onClick={(e) => { e.stopPropagation(); onEdit(place); }} className="text-xs font-bold text-purple-500 hover:text-purple-700 px-3 py-1.5 rounded-lg hover:bg-purple-50 transition-all">
                 Edit
               </button>
-            </div>
-          )}
+            )}
+            <div className="flex-1" />
+            {place.lat && place.lng && (
+              <a href={"https://www.google.com/maps/dir/?api=1&destination=" + place.lat + "," + place.lng} target="_blank" rel="noopener noreferrer" className="bg-blue-500 text-white text-xs font-bold px-3 py-1.5 rounded-full hover:bg-blue-600 inline-flex items-center">
+                Go
+              </a>
+            )}
+          </div>
         </div>
         </div>
       )}
@@ -1477,6 +1510,11 @@ function SpotFinder() {
                   </button>
                 </>
               )}
+              {hasActiveFilters && (
+                <button onClick={clearFilters} className="text-xs font-bold text-purple-500 hover:text-purple-700 px-2 py-1 shrink-0">
+                  Clear
+                </button>
+              )}
               {user && (
                 <button
                   onClick={() => { setEditingPlace({ name: "", location: "", type: "", foodType: "", kidFriendly: "no", food: "", vibe: "", goodFor: "", happyHour: false, dinner: false, lunch: false, brunch: false, outdoor: false, notableOutdoor: false, dateNight: false, kidsAndBeers: false, takeout: false, beer: false, notes: "", address: "", googlePlaceId: "", phone: "", website: "", lat: null, lng: null }); setExpandedId(null); }}
@@ -1490,13 +1528,6 @@ function SpotFinder() {
               )}
             </div>
           </div>
-
-          {/* Clear button row */}
-          {hasActiveFilters && (
-            <div className="flex justify-end mb-1">
-              <button onClick={clearFilters} className="text-xs font-bold text-purple-500 hover:text-purple-700">Clear</button>
-            </div>
-          )}
 
           {/* Row 1: Search */}
           <div className="mb-2 relative">
