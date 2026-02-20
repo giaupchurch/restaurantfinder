@@ -501,14 +501,14 @@ function EditForm({ place, onSave, onCancel, locations, types, foodTypes, existi
         <div className="flex rounded-xl overflow-hidden border-2 border-purple-100">
           {[
             { value: "no", label: "No" },
-            { value: "snacks", label: "Snacks" },
+            { value: "snacks", label: "Snacks/", label2: "Food Trucks" },
             { value: "full", label: "Full Menu" },
           ].map((opt) => (
             <button
               key={opt.value}
               type="button"
               onClick={() => set("food", opt.value)}
-              className={`flex-1 py-2 text-xs font-bold transition-all ${
+              className={`flex-1 py-2 text-xs font-bold transition-all leading-tight ${
                 form.food === opt.value
                   ? opt.value === "full" ? "bg-orange-500 text-white"
                     : opt.value === "snacks" ? "bg-orange-400 text-white"
@@ -516,7 +516,7 @@ function EditForm({ place, onSave, onCancel, locations, types, foodTypes, existi
                   : "bg-white text-gray-500 hover:bg-gray-50"
               }`}
             >
-              {opt.label}
+              {opt.label}{opt.label2 && React.createElement("br")}{opt.label2}
             </button>
           ))}
         </div>
@@ -598,7 +598,7 @@ function PlaceRow({ place, isExpanded, onToggle, user, onEdit, onDelete, radiusM
   if (place.dateNight) badges.push({ label: "Date Night", color: "bg-rose-100 text-rose-700" });
   if (place.takeout) badges.push({ label: "🥡 Takeout", color: "bg-orange-100 text-orange-700" });
   if (place.beer) badges.push({ label: "🍺 Beer", color: "bg-amber-100 text-amber-700" });
-  if (place.food === "snacks") badges.push({ label: "Snacks Only", color: "bg-yellow-100 text-yellow-700" });
+  if (place.food === "snacks") badges.push({ label: "Snacks/Food Trucks", color: "bg-yellow-100 text-yellow-700" });
   else if (place.food === "no") badges.push({ label: "No Food", color: "bg-gray-100 text-gray-600" });
 
   const meals = [];
@@ -634,7 +634,9 @@ function PlaceRow({ place, isExpanded, onToggle, user, onEdit, onDelete, radiusM
       </button>
 
       {isExpanded && (
-        <div className="bg-white rounded-b-xl px-3 pb-3 pt-2 -mt-2 shadow-md ring-2 ring-purple-100">
+        <div className="flex justify-end -mt-2">
+        <div className="bg-white rounded-xl px-3 pb-3 pt-2 shadow-md ring-2 ring-purple-100 w-2/3 relative">
+          <button onClick={(e) => { e.stopPropagation(); onToggle(); }} className="absolute top-1.5 right-2 text-gray-400 hover:text-gray-600 text-sm font-bold leading-none">✕</button>
           <div className="flex items-center gap-2 mb-2 flex-wrap pt-1.5 border-t border-purple-50">
             <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full ${typeBg}`}>{place.type}</span>
             <span className="text-xs font-medium text-gray-500">{place.location}</span>
@@ -655,22 +657,19 @@ function PlaceRow({ place, isExpanded, onToggle, user, onEdit, onDelete, radiusM
           )}
 
           {/* Google info: address, directions, phone */}
-          {(place.address || place.phone || (place.lat && place.lng)) && (
-            <div className="text-xs text-gray-500 space-y-1 mb-2 bg-blue-50 rounded-lg px-3 py-2">
-              {place.address && <p>{place.address}</p>}
-              <div className="flex flex-wrap gap-3">
-                {place.lat && place.lng && (
-                  <a href={"https://www.google.com/maps/dir/?api=1&destination=" + place.lat + "," + place.lng} target="_blank" rel="noopener noreferrer" className="text-blue-600 font-bold hover:underline inline-flex items-center gap-1">
-                    Get Directions
-                  </a>
-                )}
-                {place.phone && (
-                  <a href={"tel:" + place.phone} className="text-blue-600 font-bold hover:underline">{place.phone}</a>
-                )}
-                {place.website && (
-                  <a href={place.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 font-bold hover:underline">Website</a>
-                )}
-              </div>
+          {(place.phone || place.website || (place.lat && place.lng)) && (
+            <div className="flex flex-wrap gap-2 mb-2">
+              {place.lat && place.lng && (
+                <a href={"https://www.google.com/maps/dir/?api=1&destination=" + place.lat + "," + place.lng} target="_blank" rel="noopener noreferrer" className="bg-blue-500 text-white text-xs font-bold px-3 py-1.5 rounded-full hover:bg-blue-600 inline-flex items-center">
+                  Go
+                </a>
+              )}
+              {place.phone && (
+                <a href={"tel:" + place.phone} className="bg-blue-50 text-blue-600 text-xs font-bold px-3 py-1.5 rounded-full hover:bg-blue-100">{place.phone}</a>
+              )}
+              {place.website && (
+                <a href={place.website} target="_blank" rel="noopener noreferrer" className="bg-blue-50 text-blue-600 text-xs font-bold px-3 py-1.5 rounded-full hover:bg-blue-100">Website</a>
+              )}
             </div>
           )}
 
@@ -694,6 +693,7 @@ function PlaceRow({ place, isExpanded, onToggle, user, onEdit, onDelete, radiusM
               </button>
             </div>
           )}
+        </div>
         </div>
       )}
     </div>
