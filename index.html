@@ -262,7 +262,7 @@ function Toggle({ label, active, onClick, color = "blue" }) {
   );
 }
 
-function EditForm({ place, onSave, onCancel, locations, types, foodTypes, existingPlaces }) {
+function EditForm({ place, onSave, onCancel, onDelete, locations, types, foodTypes, existingPlaces }) {
   const [form, setForm] = useState({ ...place });
   const set = (field, val) => setForm((f) => ({ ...f, [field]: val }));
   const nameInputRef = useRef(null);
@@ -525,7 +525,7 @@ function EditForm({ place, onSave, onCancel, locations, types, foodTypes, existi
       {/* Row 4: Toggle buttons */}
       <div className="flex flex-wrap gap-1.5">
         {[
-          { key: "brunch", label: "Brunch", color: "rose" },
+          { key: "brunch", label: "Breakfast/Brunch", color: "rose" },
           { key: "lunch", label: "Lunch", color: "purple" },
           { key: "dinner", label: "Dinner", color: "purple" },
           { key: "dateNight", label: "Date Night", color: "rose" },
@@ -537,9 +537,18 @@ function EditForm({ place, onSave, onCancel, locations, types, foodTypes, existi
       </div>
 
       {/* Row 5: Vibe + Good For + Notes */}
-      <input value={form.vibe || ""} onChange={(e) => set("vibe", e.target.value)} placeholder="Vibe (e.g., Cozy upscale bistro)" className="w-full border-2 border-purple-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300" />
-      <input value={form.goodFor || ""} onChange={(e) => set("goodFor", e.target.value)} placeholder="Good for (e.g., Date night, families)" className="w-full border-2 border-purple-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300" />
-      <input value={form.notes || ""} onChange={(e) => set("notes", e.target.value)} placeholder="Notes (personal tips, observations)" className="w-full border-2 border-purple-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300" />
+      <div>
+        <label className="text-xs font-medium text-gray-500 mb-1 block">Vibe</label>
+        <input value={form.vibe || ""} onChange={(e) => set("vibe", e.target.value)} placeholder="e.g., Cozy upscale bistro" className="w-full border-2 border-purple-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300" />
+      </div>
+      <div>
+        <label className="text-xs font-medium text-gray-500 mb-1 block">Good For</label>
+        <input value={form.goodFor || ""} onChange={(e) => set("goodFor", e.target.value)} placeholder="e.g., Date night, families" className="w-full border-2 border-purple-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300" />
+      </div>
+      <div>
+        <label className="text-xs font-medium text-gray-500 mb-1 block">Notes</label>
+        <input value={form.notes || ""} onChange={(e) => set("notes", e.target.value)} placeholder="Personal tips, observations" className="w-full border-2 border-purple-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300" />
+      </div>
 
       {/* Save button */}
       <button
@@ -548,6 +557,14 @@ function EditForm({ place, onSave, onCancel, locations, types, foodTypes, existi
       >
         {place.id ? "Save Changes" : "Add Place"}
       </button>
+      {place.id && onDelete && (
+        <button
+          onClick={() => { if (confirm("Delete " + form.name + "?")) onDelete(place); }}
+          className="w-full text-xs font-bold text-red-400 hover:text-red-600 py-2 rounded-lg hover:bg-red-50 transition-all"
+        >
+          Delete This Place
+        </button>
+      )}
     </div>
   );
 }
@@ -607,7 +624,7 @@ function PlaceRow({ place, isExpanded, onToggle, user, onEdit, onDelete, radiusM
   if (place.brunch) meals.push("Brunch");
 
   return (
-    <div className="overflow-hidden">
+    <div className="relative">
       <button
         onClick={onToggle}
         className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl transition-all ${
@@ -634,29 +651,23 @@ function PlaceRow({ place, isExpanded, onToggle, user, onEdit, onDelete, radiusM
       </button>
 
       {isExpanded && (
-        <div className="flex justify-end -mt-2">
-        <div className="bg-white rounded-xl px-3 pb-3 pt-2 shadow-md ring-2 ring-purple-100 w-2/3 relative">
-          <button onClick={(e) => { e.stopPropagation(); onToggle(); }} className="absolute top-1.5 right-2 text-gray-400 hover:text-gray-600 text-sm font-bold leading-none">✕</button>
-          <div className="flex items-center gap-2 mb-2 flex-wrap pt-1.5 border-t border-purple-50">
+        <div className="absolute left-2 right-2 z-10 mt-1">
+        <div className="bg-white rounded-xl px-3 pb-3 pt-2 shadow-lg ring-2 ring-purple-100 relative">
+          <button onClick={(e) => { e.stopPropagation(); onToggle(); }} className="absolute top-2 right-2.5 text-gray-400 hover:text-gray-600 text-lg font-bold leading-none">✕</button>
+          <div className="flex items-center gap-2 mb-2 flex-wrap pr-6">
             <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full ${typeBg}`}>{place.type}</span>
             <span className="text-xs font-medium text-gray-500">{place.location}</span>
             {place.foodType && <span className="text-xs text-gray-400">&middot; {place.foodType}</span>}
           </div>
 
-          {(badges.length > 0 || meals.length > 0) && (
+          {badges.length > 0 && (
             <div className="flex gap-1.5 mb-2 flex-wrap">
               {badges.map((b) => (
                 <span key={b.label} className={`text-xs font-bold px-2.5 py-0.5 rounded-full ${b.color}`}>{b.label}</span>
               ))}
-              {meals.length > 0 && (
-                <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-700">
-                  {meals.join(" \u00b7 ")}
-                </span>
-              )}
             </div>
           )}
 
-          {/* Google info: address, directions, phone */}
           {(place.phone || place.website || (place.lat && place.lng)) && (
             <div className="flex flex-wrap gap-2 mb-2">
               {place.lat && place.lng && (
@@ -675,21 +686,16 @@ function PlaceRow({ place, isExpanded, onToggle, user, onEdit, onDelete, radiusM
 
           <div className="text-sm text-gray-600 space-y-1">
             {place.vibe && <p><span className="text-purple-400 font-medium">Vibe:</span> {place.vibe}</p>}
-            {place.goodFor && <p><span className="text-purple-400 font-medium">Good for:</span> {place.goodFor}</p>}
             {place.notes && <p className="text-gray-400 italic text-xs mt-1.5 bg-gray-50 rounded-lg px-3 py-2">{place.notes}</p>}
-            {!place.vibe && !place.goodFor && !place.notes && !place.foodType && badges.length === 0 && meals.length === 0 && (
+            {!place.vibe && !place.notes && !place.foodType && badges.length === 0 && (
               <p className="text-gray-300 italic text-xs">No details yet</p>
             )}
           </div>
 
-          {/* Edit/Delete buttons — only show when signed in */}
           {user && (
             <div className="flex gap-2 mt-3 pt-2 border-t border-purple-50">
               <button onClick={(e) => { e.stopPropagation(); onEdit(place); }} className="text-xs font-bold text-purple-500 hover:text-purple-700 px-3 py-1.5 rounded-lg hover:bg-purple-50 transition-all">
                 Edit
-              </button>
-              <button onClick={(e) => { e.stopPropagation(); if (confirm("Delete " + place.name + "?")) onDelete(place); }} className="text-xs font-bold text-red-400 hover:text-red-600 px-3 py-1.5 rounded-lg hover:bg-red-50 transition-all">
-                Delete
               </button>
             </div>
           )}
@@ -1485,7 +1491,7 @@ function SpotFinder() {
           </div>
 
           {/* Row 1: Search */}
-          <div className="mb-2">
+          <div className="mb-2 relative">
             <input
               type="search"
               enterKeyHint="search"
@@ -1493,31 +1499,37 @@ function SpotFinder() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter") e.target.blur(); }}
-              className="w-full border-2 border-purple-100 rounded-xl px-3 py-1.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent bg-white"
+              className="w-full border-2 border-purple-100 rounded-xl px-3 py-1.5 pr-8 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent bg-white"
             />
+            {search && (
+              <button onClick={() => setSearch("")} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-lg font-bold leading-none">✕</button>
+            )}
           </div>
 
-          {/* Row 2: Dropdowns */}
-          <div className="flex gap-1.5 items-center mb-2">
-            <MultiSelect label="Type" allLabel="All Types" options={types} selected={filterTypes} onChange={setFilterTypes} />
-            <MultiSelect label="Location" allLabel="All Locations" options={locations} selected={filterLocations} onChange={setFilterLocations} />
-            <MultiSelect label="Food" allLabel="All Food Types" options={foodTypes} selected={filterFoodTypes} onChange={setFilterFoodTypes} />
+          {/* Row 2: Emoji filters */}
+          <div className="flex items-center gap-1.5 flex-wrap mb-1.5">
+            <Toggle label="🍺" active={filterBeer} onClick={() => setFilterBeer(!filterBeer)} color="amber" />
+            <Toggle label="👶" active={filterKidFriendly} onClick={() => setFilterKidFriendly(!filterKidFriendly)} color="green" />
+            <Toggle label="🌳" active={filterOutdoor} onClick={() => setFilterOutdoor(!filterOutdoor)} color="teal" />
+            <Toggle label="🍷" active={filterDateNight} onClick={() => setFilterDateNight(!filterDateNight)} color="rose" />
+            <Toggle label="🥡" active={filterTakeout} onClick={() => setFilterTakeout(!filterTakeout)} color="orange" />
           </div>
 
           {/* Row 3: Meal toggles */}
           <div className="flex items-center gap-1.5 flex-wrap mb-1.5">
-            <Toggle label="Brunch" active={filterBrunch} onClick={() => setFilterBrunch(!filterBrunch)} color="rose" />
+            <Toggle label="Breakfast/Brunch" active={filterBrunch} onClick={() => setFilterBrunch(!filterBrunch)} color="rose" />
             <Toggle label="Lunch" active={filterLunch} onClick={() => setFilterLunch(!filterLunch)} color="purple" />
             <Toggle label="Dinner" active={filterDinner} onClick={() => setFilterDinner(!filterDinner)} color="purple" />
           </div>
 
-          {/* Row 4: Special filters */}
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <Toggle label="👶" active={filterKidFriendly} onClick={() => setFilterKidFriendly(!filterKidFriendly)} color="green" />
-            <Toggle label="🍺" active={filterBeer} onClick={() => setFilterBeer(!filterBeer)} color="amber" />
-            <Toggle label="🌳" active={filterOutdoor} onClick={() => setFilterOutdoor(!filterOutdoor)} color="teal" />
-            <Toggle label="🍷" active={filterDateNight} onClick={() => setFilterDateNight(!filterDateNight)} color="rose" />
-            <Toggle label="🥡" active={filterTakeout} onClick={() => setFilterTakeout(!filterTakeout)} color="orange" />
+          {/* Row 4: Dropdowns + Clear */}
+          <div className="flex gap-1.5 items-center">
+            <MultiSelect label="Type" allLabel="All Types" options={types} selected={filterTypes} onChange={setFilterTypes} />
+            <MultiSelect label="Cuisine" allLabel="All Cuisines" options={foodTypes} selected={filterFoodTypes} onChange={setFilterFoodTypes} />
+            <MultiSelect label="Area" allLabel="All Areas" options={locations} selected={filterLocations} onChange={setFilterLocations} />
+            {hasActiveFilters && (
+              <button onClick={clearFilters} className="text-xs font-bold text-purple-500 hover:text-purple-700 shrink-0">Clear</button>
+            )}
           </div>
 
           {/* Row 4: Radius Filter */}
@@ -1534,19 +1546,14 @@ function SpotFinder() {
               >
                 {geoLoading ? "Finding you..." : "Near Me"}
               </button>
-              <div className="flex-1 min-w-[140px] relative">
+              <div className="flex-1 min-w-[140px]">
                 <input
                   ref={addressInputRef}
-                  placeholder="Search near an address..."
+                  placeholder="Search near..."
                   className={`w-full border-2 rounded-xl px-3 py-1.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-transparent ${
                     radiusMode === "address" ? "border-blue-300 bg-blue-50" : "border-purple-100 bg-white"
-                  } ${hasActiveFilters ? "pr-12" : ""}`}
+                  }`}
                 />
-                {hasActiveFilters && (
-                  <button onClick={clearFilters} className="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-bold text-purple-500 hover:text-purple-700">
-                    Clear
-                  </button>
-                )}
               </div>
               {radiusMode && (
                 <>
@@ -1608,6 +1615,7 @@ function SpotFinder() {
               place={editingPlace}
               onSave={savePlace}
               onCancel={() => setEditingPlace(null)}
+              onDelete={(p) => { deletePlace(p); setEditingPlace(null); }}
               locations={locations}
               types={types}
               foodTypes={foodTypes}
