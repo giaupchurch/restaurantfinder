@@ -669,17 +669,18 @@ function PlaceRow({ place, isExpanded, onToggle, user, onEdit, onDelete, radiusM
           )}
 
           {(place.phone || place.website || (place.lat && place.lng)) && (
-            <div className="flex flex-wrap gap-2 mb-2">
-              {place.lat && place.lng && (
-                <a href={"https://www.google.com/maps/dir/?api=1&destination=" + place.lat + "," + place.lng} target="_blank" rel="noopener noreferrer" className="bg-blue-500 text-white text-xs font-bold px-3 py-1.5 rounded-full hover:bg-blue-600 inline-flex items-center">
-                  Go
-                </a>
-              )}
+            <div className="flex flex-wrap gap-2 mb-2 items-center">
               {place.phone && (
                 <a href={"tel:" + place.phone} className="bg-blue-50 text-blue-600 text-xs font-bold px-3 py-1.5 rounded-full hover:bg-blue-100">{place.phone}</a>
               )}
               {place.website && (
                 <a href={place.website} target="_blank" rel="noopener noreferrer" className="bg-blue-50 text-blue-600 text-xs font-bold px-3 py-1.5 rounded-full hover:bg-blue-100">Website</a>
+              )}
+              <div className="flex-1" />
+              {place.lat && place.lng && (
+                <a href={"https://www.google.com/maps/dir/?api=1&destination=" + place.lat + "," + place.lng} target="_blank" rel="noopener noreferrer" className="bg-blue-500 text-white text-xs font-bold px-3 py-1.5 rounded-full hover:bg-blue-600 inline-flex items-center">
+                  Go
+                </a>
               )}
             </div>
           )}
@@ -1490,12 +1491,19 @@ function SpotFinder() {
             </div>
           </div>
 
+          {/* Clear button row */}
+          {hasActiveFilters && (
+            <div className="flex justify-end mb-1">
+              <button onClick={clearFilters} className="text-xs font-bold text-purple-500 hover:text-purple-700">Clear</button>
+            </div>
+          )}
+
           {/* Row 1: Search */}
           <div className="mb-2 relative">
             <input
               type="search"
               enterKeyHint="search"
-              placeholder="Search..."
+              placeholder="Search places, cuisine types, etc..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter") e.target.blur(); }}
@@ -1506,30 +1514,27 @@ function SpotFinder() {
             )}
           </div>
 
-          {/* Row 2: Emoji filters */}
-          <div className="flex items-center gap-1.5 flex-wrap mb-1.5">
-            <Toggle label="🍺" active={filterBeer} onClick={() => setFilterBeer(!filterBeer)} color="amber" />
-            <Toggle label="👶" active={filterKidFriendly} onClick={() => setFilterKidFriendly(!filterKidFriendly)} color="green" />
-            <Toggle label="🌳" active={filterOutdoor} onClick={() => setFilterOutdoor(!filterOutdoor)} color="teal" />
-            <Toggle label="🍷" active={filterDateNight} onClick={() => setFilterDateNight(!filterDateNight)} color="rose" />
-            <Toggle label="🥡" active={filterTakeout} onClick={() => setFilterTakeout(!filterTakeout)} color="orange" />
-          </div>
-
-          {/* Row 3: Meal toggles */}
+          {/* Row 2: Meal toggles */}
           <div className="flex items-center gap-1.5 flex-wrap mb-1.5">
             <Toggle label="Breakfast/Brunch" active={filterBrunch} onClick={() => setFilterBrunch(!filterBrunch)} color="rose" />
             <Toggle label="Lunch" active={filterLunch} onClick={() => setFilterLunch(!filterLunch)} color="purple" />
             <Toggle label="Dinner" active={filterDinner} onClick={() => setFilterDinner(!filterDinner)} color="purple" />
           </div>
 
-          {/* Row 4: Dropdowns + Clear */}
-          <div className="flex gap-1.5 items-center">
+          {/* Row 3: Dropdowns */}
+          <div className="flex gap-1.5 items-center mb-1.5">
             <MultiSelect label="Type" allLabel="All Types" options={types} selected={filterTypes} onChange={setFilterTypes} />
             <MultiSelect label="Cuisine" allLabel="All Cuisines" options={foodTypes} selected={filterFoodTypes} onChange={setFilterFoodTypes} />
             <MultiSelect label="Area" allLabel="All Areas" options={locations} selected={filterLocations} onChange={setFilterLocations} />
-            {hasActiveFilters && (
-              <button onClick={clearFilters} className="text-xs font-bold text-purple-500 hover:text-purple-700 shrink-0">Clear</button>
-            )}
+          </div>
+
+          {/* Row 4: Emoji filters */}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <Toggle label="🍺" active={filterBeer} onClick={() => setFilterBeer(!filterBeer)} color="amber" />
+            <Toggle label="👶" active={filterKidFriendly} onClick={() => setFilterKidFriendly(!filterKidFriendly)} color="green" />
+            <Toggle label="🌳" active={filterOutdoor} onClick={() => setFilterOutdoor(!filterOutdoor)} color="teal" />
+            <Toggle label="🍷" active={filterDateNight} onClick={() => setFilterDateNight(!filterDateNight)} color="rose" />
+            <Toggle label="🥡" active={filterTakeout} onClick={() => setFilterTakeout(!filterTakeout)} color="orange" />
           </div>
 
           {/* Row 4: Radius Filter */}
